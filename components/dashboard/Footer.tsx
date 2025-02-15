@@ -1,3 +1,5 @@
+"use client";
+
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Footer, FooterBottom } from "@/components/ui/footer";
 import { Button } from "../ui/button";

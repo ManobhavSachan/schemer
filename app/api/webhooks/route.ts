@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       return new Response('Error: No email found', {
         status: 400,
       })
-      
+
     }
     if(!first_name) {
       return new Response('Error: No first name found', {

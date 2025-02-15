@@ -1,4 +1,5 @@
-import { UserButton } from "@clerk/nextjs";
+"use client";
+
 import Header from "@/components/dashboard/Header";
 import Footer from "@/components/dashboard/Footer";
 import Content from "@/components/dashboard/Content";

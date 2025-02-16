@@ -34,7 +34,11 @@ const Content = ({
   return (
     <div className="flex p-4 mt-10">
       <div className="max-w-5xl mx-auto px-8">
-        <HoverEffect items={data} />
+        {data.length === 0 ? (
+          <p className="text-center text-md">No items found</p>
+        ) : (
+          <HoverEffect items={data} />
+        )}
       </div>
     </div>
   );

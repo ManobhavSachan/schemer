@@ -5,8 +5,8 @@ import Footer from "@/components/dashboard/Footer";
 import Content from "@/components/dashboard/Content";
 
 function getRandomImageUrl() {
-  const randomId = Math.floor(Math.random() * 1000); // Generates a random number between 0 and 999
-  return `https://picsum.photos/250/${randomId}`;
+  // Use fixed dimensions for consistent layout
+  return `https://picsum.photos/300/175?random=${Math.floor(Math.random() * 1000)}`;
 }
 
 const data = [

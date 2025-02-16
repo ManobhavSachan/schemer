@@ -14,53 +14,53 @@ datasource db {
 }
 
 model User {
-  id           String         @id @default(uuid())
-  email        String         @unique
-  firstName    String
-  lastName     String?
-  externalId   String         @unique
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  Project      Project[]
-  Collaborator Collaborator[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  firstName     String
+  lastName      String?
+  externalId    String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  projects      Project[]
+  collaborators Collaborator[]
 }
 
 model Project {
-  id           String         @id @default(uuid())
-  title        String
-  imageUrl     String?
-  description  String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  userId       String
-  User         User           @relation(fields: [userId], references: [id])
-  Table        Table[]
-  Version      Version[]
-  Collaborator Collaborator[]
+  id            String         @id @default(uuid())
+  title         String
+  imageUrl      String?
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  projectTables ProjectTable[]
+  versions      Version[]
+  collaborators Collaborator[]
 
   @@index([userId])
 }
 
-model Table {
+model ProjectTable {
   id                  String         @id @default(uuid())
   name                String
   projectId           String
-  Project             Project        @relation(fields: [projectId], references: [id])
-  Column              Column[]
+  project             Project        @relation(fields: [projectId], references: [id])
+  tableColumns        TableColumn[]
   sourceRelationships Relationship[] @relation("RelationshipSourceTable")
   targetRelationships Relationship[] @relation("RelationshipTargetTable")
 
   @@index([projectId])
 }
 
-model Column {
+model TableColumn {
   id                  String         @id @default(uuid())
   name                String
   dataType            String
   isNullable          Boolean        @default(false)
   defaultValue        String?
   tableId             String
-  Table               Table          @relation(fields: [tableId], references: [id])
+  projectTable        ProjectTable   @relation(fields: [tableId], references: [id])
   sourceRelationships Relationship[] @relation("RelationshipSourceColumn")
   targetRelationships Relationship[] @relation("RelationshipTargetColumn")
 
@@ -80,10 +80,10 @@ model Relationship {
   targetTableId    String
   sourceColumnId   String
   targetColumnId   String
-  SourceTable      Table            @relation("RelationshipSourceTable", fields: [sourceTableId], references: [id])
-  TargetTable      Table            @relation("RelationshipTargetTable", fields: [targetTableId], references: [id])
-  SourceColumn     Column           @relation("RelationshipSourceColumn", fields: [sourceColumnId], references: [id])
-  TargetColumn     Column           @relation("RelationshipTargetColumn", fields: [targetColumnId], references: [id])
+  sourceTable      ProjectTable     @relation("RelationshipSourceTable", fields: [sourceTableId], references: [id])
+  targetTable      ProjectTable     @relation("RelationshipTargetTable", fields: [targetTableId], references: [id])
+  sourceColumn     TableColumn      @relation("RelationshipSourceColumn", fields: [sourceColumnId], references: [id])
+  targetColumn     TableColumn      @relation("RelationshipTargetColumn", fields: [targetColumnId], references: [id])
 
   @@index([sourceColumnId])
 }
@@ -95,7 +95,7 @@ model Version {
   changeLogUrl String
   note         String?
   createdAt    DateTime @default(now())
-  Project      Project  @relation(fields: [projectId], references: [id])
+  project      Project  @relation(fields: [projectId], references: [id])
 
   @@unique([projectId, version])
   @@index([projectId])
@@ -112,8 +112,8 @@ model Collaborator {
   userId    String
   projectId String
   role      CollaboratorRole
-  User      User             @relation(fields: [userId], references: [id])
-  Project   Project          @relation(fields: [projectId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
+  project   Project          @relation(fields: [projectId], references: [id])
 
   @@unique([userId, projectId])
   @@index([userId])

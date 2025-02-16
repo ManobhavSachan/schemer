@@ -30,7 +30,7 @@ export const HoverEffect = ({
     >
       {items.map((item, idx) => (
         <Link
-          href={`/dashboard/${item.id}`}
+          href={`/project/${item.id}`}
           aria-label={`View details for ${item.name}`}
           key={item.id}
           className="relative group  block p-2 h-full w-full"

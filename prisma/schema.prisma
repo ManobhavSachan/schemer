@@ -14,14 +14,108 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  firstName String
-  lastName  String?
-  externalId String @unique
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-//   projects  Project[]
-//   collaborators Collaborator[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  firstName     String
+  lastName      String?
+  externalId    String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  projects      Project[]
+  collaborators Collaborator[]
 }
 
+model Project {
+  id            String         @id @default(uuid())
+  title         String
+  imageUrl      String?
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  projectTables ProjectTable[]
+  versions      Version[]
+  collaborators Collaborator[]
+
+  @@index([userId])
+}
+
+model ProjectTable {
+  id                  String         @id @default(uuid())
+  name                String
+  projectId           String
+  project             Project        @relation(fields: [projectId], references: [id])
+  tableColumns        TableColumn[]
+  sourceRelationships Relationship[] @relation("RelationshipSourceTable")
+  targetRelationships Relationship[] @relation("RelationshipTargetTable")
+
+  @@index([projectId])
+}
+
+model TableColumn {
+  id                  String         @id @default(uuid())
+  name                String
+  dataType            String
+  isNullable          Boolean        @default(false)
+  defaultValue        String?
+  tableId             String
+  projectTable        ProjectTable   @relation(fields: [tableId], references: [id])
+  sourceRelationships Relationship[] @relation("RelationshipSourceColumn")
+  targetRelationships Relationship[] @relation("RelationshipTargetColumn")
+
+  @@index([tableId])
+}
+
+enum RelationshipType {
+  one_to_one
+  one_to_many
+  many_to_many
+}
+
+model Relationship {
+  id               String           @id @default(uuid())
+  sourceTableId    String
+  relationshipType RelationshipType
+  targetTableId    String
+  sourceColumnId   String
+  targetColumnId   String
+  sourceTable      ProjectTable     @relation("RelationshipSourceTable", fields: [sourceTableId], references: [id])
+  targetTable      ProjectTable     @relation("RelationshipTargetTable", fields: [targetTableId], references: [id])
+  sourceColumn     TableColumn      @relation("RelationshipSourceColumn", fields: [sourceColumnId], references: [id])
+  targetColumn     TableColumn      @relation("RelationshipTargetColumn", fields: [targetColumnId], references: [id])
+
+  @@index([sourceColumnId])
+}
+
+model Version {
+  id           String   @id @default(uuid())
+  projectId    String
+  version      Int
+  changeLogUrl String
+  note         String?
+  createdAt    DateTime @default(now())
+  project      Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, version])
+  @@index([projectId])
+}
+
+enum CollaboratorRole {
+  admin
+  editor
+  viewer
+}
+
+model Collaborator {
+  id        String           @id @default(uuid())
+  userId    String
+  projectId String
+  role      CollaboratorRole
+  user      User             @relation(fields: [userId], references: [id])
+  project   Project          @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}

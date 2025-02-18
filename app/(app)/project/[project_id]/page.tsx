@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 import Canvas from "@/components/project/Canvas/Canvas";
 
 export default function ProjectPage() {
-
   const params = useParams();
   const projectId = params.project_id;
 
@@ -12,10 +11,8 @@ export default function ProjectPage() {
   console.log(projectId);
 
   return (
-    <div>
-        <h1>Project Details</h1>
-        <p>Project ID: {projectId}</p>
-        <Canvas />
+    <div className="flex h-full w-full">
+      <Canvas />
     </div>
   );
 }

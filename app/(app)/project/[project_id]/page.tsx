@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Canvas from "@/components/project/Canvas/Canvas";
+import { ReactFlowProvider } from "@xyflow/react";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -12,7 +13,9 @@ export default function ProjectPage() {
 
   return (
     <div className="flex h-full w-full">
-      <Canvas />
+      <ReactFlowProvider>
+        <Canvas />
+      </ReactFlowProvider>
     </div>
   );
 }

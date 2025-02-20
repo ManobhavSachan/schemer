@@ -8,7 +8,7 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { data, isLoading, refetch } = useGetProjects(!!user);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function DashboardPage() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <Content isLoading={isLoading} data={data?.projects} />
+        <Content isLoading={isLoading || !isLoaded} data={data?.projects} />
       </main>
       <Footer />
     </div>

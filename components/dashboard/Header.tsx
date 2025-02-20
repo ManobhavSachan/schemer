@@ -4,7 +4,6 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { ProjectBox } from "./ProjectBox";
 import { dark } from "@clerk/themes";
 import { useTheme } from "next-themes";
 import { useState } from "react";
@@ -19,6 +18,7 @@ export default function Header() {
     date: SortOrder;
     name: SortOrder;
   }>({ date: "asc", name: "asc" });
+
   const handleSignIn = () => {
     router.push("/sign-in");
   };
@@ -32,7 +32,6 @@ export default function Header() {
       <div className="flex justify-between items-center gap-4 bg-background">
         <CreateProject />
         <div className="items-center gap-2 md:flex hidden">
-          <Input placeholder="Search" className="lg:w-[75vh] w-[40vh]" />
           <FilterDropdown
             selectedSorts={selectedSorts}
             onSort={(sortType: SortType, sortOrder: SortOrder) => {
@@ -43,10 +42,15 @@ export default function Header() {
               }
             }}
           />
+          <Input placeholder="Search" className="lg:w-[75vh] w-[40vh]" />
+          <Button variant="default" onClick={() => handleSignUp()}>
+            Search
+          </Button>
         </div>
         {isSignedIn ? (
           <div className="flex gap-4">
-            <ProjectBox />
+            {/* Not Needed yet */}
+            {/* <ProjectBox /> */}
             <UserButton
               appearance={{
                 baseTheme: resolvedTheme === "dark" ? dark : undefined,
@@ -65,7 +69,6 @@ export default function Header() {
         )}
       </div>
       <div className="items-center gap-2 md:hidden flex">
-        <Input placeholder="Search" className="w-full" />
         <FilterDropdown
           selectedSorts={selectedSorts}
           onSort={(sortType: SortType, sortOrder: SortOrder) => {
@@ -75,6 +78,12 @@ export default function Header() {
               setSelectedSorts({ ...selectedSorts, name: sortOrder });
             }
           }}
+        />
+        <Input
+          type="search"
+          placeholder="Search"
+          className="w-full"
+          enterKeyHint="search"
         />
       </div>
     </div>

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { CollaboratorRole } from "@prisma/client";
 import { getUser } from "../user/helper";
+import DOMPurify from "isomorphic-dompurify";
+import { validateProjectInput, getProjectFilters } from "./helper";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,48 +11,29 @@ export async function GET(request: NextRequest) {
     // Get search params
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get("search") || "";
-    const dateOrder = (searchParams.get("dateOrder") || "desc") as
-      | "asc"
-      | "desc";
-    const nameOrder = (searchParams.get("nameOrder") || "asc") as
-      | "asc"
-      | "desc";
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const validOrders = ["asc", "desc"] as const;
+    type OrderType = (typeof validOrders)[number];
+
+    const validateOrder = (
+      order: string | null,
+      defaultOrder: OrderType
+    ): OrderType =>
+      order && validOrders.includes(order as OrderType)
+        ? (order as OrderType)
+        : defaultOrder;
+
+    const dateOrder = validateOrder(searchParams.get("dateOrder"), "desc");
+    const nameOrder = validateOrder(searchParams.get("nameOrder"), "asc");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "10"))
+    );
     const skip = (page - 1) * limit;
 
     // Get user's projects with filters
     const projects = await prisma.project.findMany({
-      where: {
-        OR: [
-          {
-            title: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-          {
-            description: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-        ],
-        AND: [
-          {
-            OR: [
-              { userId },
-              {
-                collaborators: {
-                  some: {
-                    userId,
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
+      where: getProjectFilters(search, userId),
       orderBy: [{ title: nameOrder }, { createdAt: dateOrder }],
       skip,
       take: limit,
@@ -77,36 +60,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count for pagination
     const total = await prisma.project.count({
-      where: {
-        OR: [
-          {
-            title: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-          {
-            description: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-        ],
-        AND: [
-          {
-            OR: [
-              { userId },
-              {
-                collaborators: {
-                  some: {
-                    userId,
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
+      where: getProjectFilters(search, userId),
     });
 
     return NextResponse.json({
@@ -132,8 +86,14 @@ export async function POST(request: NextRequest) {
     const { id: userId } = await getUser();
 
     const body = await request.json();
-    console.log("Body", body);
     const { title, description, imageUrl } = body;
+    validateProjectInput({ title, description, imageUrl });
+
+    const sanitizedInput = {
+      title: DOMPurify.sanitize(title),
+      description: description ? DOMPurify.sanitize(description) : undefined,
+      imageUrl: imageUrl ? DOMPurify.sanitize(imageUrl) : undefined,
+    };
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -145,9 +105,9 @@ export async function POST(request: NextRequest) {
       console.log("Creating project", title, description, imageUrl, userId);
       const newProject = await tx.project.create({
         data: {
-          title,
-          description,
-          imageUrl,
+          title: sanitizedInput.title,
+          description: sanitizedInput.description,
+          imageUrl: sanitizedInput.imageUrl,
           userId,
         },
       });

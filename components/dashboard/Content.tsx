@@ -11,7 +11,6 @@ const Content = ({
   isLoading: boolean;
   data: Project[] | undefined;
 }) => {
-  console.log("data", data);
   if (isLoading) {
     return (
       <div className="flex p-4 mt-10">

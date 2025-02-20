@@ -14,8 +14,11 @@ import { Label } from "@/components/ui/label";
 import { useCreateProject } from "@/hooks/useProject";
 import { useRouter } from "next/navigation";
 import { Textarea } from "../ui/textarea";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast"
 
 export function CreateProject() {
+  const { toast } = useToast();
   const router = useRouter();
   const { mutate: createProject, isPending } = useCreateProject(
     (data) => {
@@ -23,6 +26,11 @@ export function CreateProject() {
     },
     () => {
       console.error("Error creating project:");
+      toast({
+        title: "Error",
+        description: "Failed to create project. Please try again.",
+        variant: "destructive",
+      });
     }
   );
 
@@ -47,15 +55,29 @@ export function CreateProject() {
     return descriptions[Math.floor(Math.random() * descriptions.length)];
   };
 
-  const handleSubmit = () => {
-    const nameInput = document.getElementById("name") as HTMLInputElement;
-    const descriptionInput = document.getElementById(
-      "description"
-    ) as HTMLTextAreaElement;
+  const [formData, setFormData] = useState({ name: '', description: '' });
 
-    const title = nameInput?.value?.trim() || generateSarcasticTitle();
-    const description =
-      descriptionInput?.value?.trim() || generateSarcasticDescription();
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.id]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = () => {
+
+    const title = formData.name.trim() || generateSarcasticTitle();
+    const description = formData.description.trim() || formData.name.trim() ? '': generateSarcasticDescription();
+
+    if (title.length > 255 || description.length > 1000) {
+      toast({
+        title: "Error",
+        description: "Title and description must be less than 255 and 1000 characters respectively.",
+      });
+      return;
+    }
 
     createProject({
       title,
@@ -69,13 +91,15 @@ export function CreateProject() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">+ New</Button>
+        <Button variant="default">+ New</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>
-            {"Don't worry, we'll fill it automatically with generic placeholder text because who has time for creativity these days?"}
+            {
+              "Are you lazy? We'll fill it automatically with generic placeholder text because who has time for creativity these days."
+            }
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -87,6 +111,8 @@ export function CreateProject() {
               id="name"
               placeholder="Do you have a name in mind?"
               className="col-span-3"
+              value={formData.name}
+              onChange={handleInputChange}
             />
           </div>
           <div className="flex flex-col items-start gap-2">
@@ -97,6 +123,8 @@ export function CreateProject() {
               id="description"
               rows={4}
               placeholder="Oh yes, another *thrilling* project description..."
+              onChange={handleInputChange}
+              value={formData.description}
             />
           </div>
         </div>

@@ -1,12 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Metadata } from "next";
-import { ThemeProvider } from "@/components/theme-provider";
+import Providers from "./provider";
 
 export const metadata: Metadata = {
   title: "Schemer",
-  description:
-    "Schemer is a tool that helps you to create database schemas and generate code",
+  description: "Schemer is a tool that helps you to create database schemas and generate code",
   icons: {
     icon: [
       {
@@ -29,14 +28,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Providers>
           <body>{children}</body>
-        </ThemeProvider>
+        </Providers>
       </html>
     </ClerkProvider>
   );

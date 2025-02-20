@@ -9,6 +9,7 @@ import { dark } from "@clerk/themes";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { FilterDropdown, SortType, SortOrder } from "./FilterDropdown";
+import { CreateProject } from "./CreateProject";
 
 export default function Header() {
   const { isSignedIn } = useUser();
@@ -29,9 +30,7 @@ export default function Header() {
   return (
     <div className="flex flex-col gap-4 p-4 bg-background">
       <div className="flex justify-between items-center gap-4 bg-background">
-        <Button variant="default" onClick={() => handleSignIn()}>
-          + New
-        </Button>
+        <CreateProject />
         <div className="items-center gap-2 md:flex hidden">
           <Input placeholder="Search" className="lg:w-[75vh] w-[40vh]" />
           <FilterDropdown

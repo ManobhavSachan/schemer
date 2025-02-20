@@ -4,22 +4,21 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import React from "react";
+import { Project } from "@/types/projects/project";
 
 export const HoverEffect = ({
   items,
   className,
 }: {
-  items: {
-    id: string;
-    description: string;
-    image_url: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-  }[];
+  items: Project[];
   className?: string;
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // Add safety check for items
+  if (!Array.isArray(items)) {
+    return null; // or return a loading state/error message
+  }
 
   return (
     <div
@@ -28,10 +27,10 @@ export const HoverEffect = ({
         className
       )}
     >
-      {items.map((item, idx) => (
+      {items?.map((item, idx) => (
         <Link
           href={`/project/${item.id}`}
-          aria-label={`View details for ${item.name}`}
+          aria-label={`View details for ${item.title}`}
           key={item.id}
           className="relative group  block p-2 h-full w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
@@ -66,15 +65,42 @@ export const Card = ({
   content,
 }: {
   className?: string;
-  content: {
-    id: string;
-    description: string;
-    image_url: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-  };
+  content: Project;
 }) => {
+  
+  const formatDate = (date: string) => {
+    const now = new Date();
+    const pastDate = new Date(date);
+    const diffInSeconds = Math.floor((now.getTime() - pastDate.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds} seconds ago`;
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 30) {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+    }
+
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) {
+      return `${diffInMonths} ${diffInMonths === 1 ? 'month' : 'months'} ago`;
+    }
+
+    const diffInYears = Math.floor(diffInMonths / 12);
+    return `${diffInYears} ${diffInYears === 1 ? 'year' : 'years'} ago`;
+  };
+
   return (
     <div
       className={cn(
@@ -85,7 +111,7 @@ export const Card = ({
       <div className="relative z-50">
         <div className="flex flex-col p-2 rounded-lg">
           <Image
-            src={content.image_url}
+            src={content.imageUrl || ""}
             alt="Description"
             width={300}
             height={175}
@@ -95,8 +121,8 @@ export const Card = ({
           />
           <div className={"flex justify-between p-2 items-center rounded-b-lg"}>
             <div className="space-y-1">
-              <p className="text-md font-medium">{content.name}</p>
-              <p className="text-sm">{content.created_at}</p>
+              <p className="text-md font-medium">{content.title}</p>
+              <p className="text-sm">{formatDate(content.createdAt)}</p>
             </div>
           </div>
         </div>

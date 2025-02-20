@@ -4,22 +4,21 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import React from "react";
+import { Project } from "@/types/projects/project";
 
 export const HoverEffect = ({
   items,
   className,
 }: {
-  items: {
-    id: string;
-    description: string;
-    image_url: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-  }[];
+  items: Project[];
   className?: string;
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // Add safety check for items
+  if (!Array.isArray(items)) {
+    return null; // or return a loading state/error message
+  }
 
   return (
     <div
@@ -28,10 +27,10 @@ export const HoverEffect = ({
         className
       )}
     >
-      {items.map((item, idx) => (
+      {items?.map((item, idx) => (
         <Link
           href={`/project/${item.id}`}
-          aria-label={`View details for ${item.name}`}
+          aria-label={`View details for ${item.title}`}
           key={item.id}
           className="relative group  block p-2 h-full w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
@@ -66,14 +65,7 @@ export const Card = ({
   content,
 }: {
   className?: string;
-  content: {
-    id: string;
-    description: string;
-    image_url: string;
-    name: string;
-    created_at: string;
-    updated_at: string;
-  };
+  content: Project;
 }) => {
   return (
     <div
@@ -85,7 +77,7 @@ export const Card = ({
       <div className="relative z-50">
         <div className="flex flex-col p-2 rounded-lg">
           <Image
-            src={content.image_url}
+            src={content.imageUrl || ""}
             alt="Description"
             width={300}
             height={175}
@@ -95,8 +87,8 @@ export const Card = ({
           />
           <div className={"flex justify-between p-2 items-center rounded-b-lg"}>
             <div className="space-y-1">
-              <p className="text-md font-medium">{content.name}</p>
-              <p className="text-sm">{content.created_at}</p>
+              <p className="text-md font-medium">{content.title}</p>
+              <p className="text-sm">{content.createdAt}</p>
             </div>
           </div>
         </div>

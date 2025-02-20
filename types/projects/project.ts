@@ -5,8 +5,8 @@ export interface Project {
   title: string
   description: string | null
   imageUrl: string | null
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
   user?: {
     firstName: string
     lastName: string | null

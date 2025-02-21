@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Get user's projects with filters
     const projects = await prisma.project.findMany({
       where: getProjectFilters(search, userId),
-      orderBy: [{ title: nameOrder }, { createdAt: dateOrder }],
+      orderBy: [{ createdAt: dateOrder }, { title: nameOrder }],
       skip,
       take: limit,
       include: {

@@ -122,7 +122,7 @@ export const Card = ({
           <div className={"flex justify-between p-2 items-center rounded-b-lg"}>
             <div className="space-y-1">
               <p className="text-md font-medium">{content.title}</p>
-              <p className="text-sm">{formatDate(content.createdAt)}</p>
+              <p className="text-sm">{formatDate(content.updatedAt)}</p>
             </div>
           </div>
         </div>

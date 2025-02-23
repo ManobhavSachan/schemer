@@ -26,8 +26,12 @@ const Content = ({
   return (
     <div className="flex p-4 mt-10">
       <div className="max-w-5xl mx-auto px-8">
-        {(!data || data.length === 0) ? (
-          <p className="mt-[200px] text-center text-md">No items found</p>
+        {!data || data.length === 0 ? (
+          <p className="mt-[200px] text-center text-md">
+            Well, this is awkwardly empty... 🤔<br />
+            Maybe try clicking that shiny &quot;New&quot; button up there!<br />
+            Just a wild suggestion! ✨
+          </p>
         ) : (
           <HoverEffect items={data} />
         )}

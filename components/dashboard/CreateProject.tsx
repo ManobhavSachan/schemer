@@ -16,10 +16,12 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "../ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast"
+import { useUser } from "@clerk/nextjs";
 
 export function CreateProject() {
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useUser();
   const { mutate: createProject, isPending } = useCreateProject(
     (data) => {
       router.push(`/project/${data.id}`);
@@ -88,10 +90,17 @@ export function CreateProject() {
     });
   };
 
+  const handleClick = () => {
+    if (!user) {
+      router.push('/sign-up');
+      return;
+    }
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default">+ New</Button>
+        <Button variant="default" onClick={handleClick}>+ New</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

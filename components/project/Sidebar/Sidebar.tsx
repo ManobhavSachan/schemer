@@ -1,110 +1,54 @@
 "use client";
-import {
-  BookOpen,
-  Bot,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react";
-
-import {
-  Sidebar,
-  SidebarContent,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { Group } from "./Group";
-
-const groupData = [
-  {
-    title: "Playground",
-    url: "#",
-    icon: SquareTerminal,
-    isActive: true,
-    items: [
-      {
-        title: "History",
-        url: "#",
-      },
-      {
-        title: "Starred",
-        url: "#",
-      },
-      {
-        title: "Settings",
-        url: "#",
-      },
-    ],
-  },
-  {
-    title: "Models",
-    url: "#",
-    icon: Bot,
-    items: [
-      {
-        title: "Genesis",
-        url: "#",
-      },
-      {
-        title: "Explorer",
-        url: "#",
-      },
-      {
-        title: "Quantum",
-        url: "#",
-      },
-    ],
-  },
-  {
-    title: "Documentation",
-    url: "#",
-    icon: BookOpen,
-    items: [
-      {
-        title: "Introduction",
-        url: "#",
-      },
-      {
-        title: "Get Started",
-        url: "#",
-      },
-      {
-        title: "Tutorials",
-        url: "#",
-      },
-      {
-        title: "Changelog",
-        url: "#",
-      },
-    ],
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings2,
-    items: [
-      {
-        title: "General",
-        url: "#",
-      },
-      {
-        title: "Team",
-        url: "#",
-      },
-      {
-        title: "Billing",
-        url: "#",
-      },
-      {
-        title: "Limits",
-        url: "#",
-      },
-    ],
-  },
-];
+import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
+import { Button } from "@/components/ui/button";
+import { useRef } from "react";
 
 export function AppSidebar() {
+  const nodes = useNodes();
+  const edges = useEdges();
+  const { addNodes } = useReactFlow();
+
+  const yPos = useRef(0);
+  const handleAddTable = () => {
+    // Add a new table node at a fixed position
+    const newNode = {
+      id: `${nodes.length + 1}`,
+      position: { x: 100, y: yPos.current },
+      type: "databaseSchema",
+      data: {
+        label: `Table ${nodes.length + 1}`,
+        schema: [{ title: "id", type: "uuid" }],
+      },
+    };
+
+    yPos.current += 10;
+    addNodes(newNode);
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
-        <Group items={groupData} />
+        <div className="flex items-center justify-between mx-4 my-4">
+          <div className="w-[70%] bg-muted text-muted-foreground rounded-md px-2 py-2 text-sm text-center">
+            <span>
+              {nodes.length} Table{nodes.length !== 1 && "s"}
+            </span>
+            <span className="mx-1">·</span>
+            <span>
+              {edges.length} Relation{edges.length !== 1 && "s"}
+            </span>
+          </div>
+          <Button
+            onClick={handleAddTable}
+            variant="default"
+            className="w-[25%]"
+          >
+            + Table
+          </Button>
+        </div>
+        <Group  />
       </SidebarContent>
     </Sidebar>
   );

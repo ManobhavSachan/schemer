@@ -9,8 +9,13 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { FilterDropdown, SortType, SortOrder } from "./FilterDropdown";
 import { CreateProject } from "./CreateProject";
+import { SearchParams } from "@/types/search-params";
 
-export default function Header() {
+interface HeaderProps {
+  onSearchParamsChange: (params: SearchParams) => void;
+}
+
+export default function Header({ onSearchParamsChange }: HeaderProps) {
   const { isSignedIn } = useUser();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
@@ -18,6 +23,7 @@ export default function Header() {
     date: SortOrder;
     name: SortOrder;
   }>({ date: "asc", name: "asc" });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSignIn = () => {
     router.push("/sign-in");
@@ -27,6 +33,28 @@ export default function Header() {
     router.push("/sign-up");
   };
 
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    onSearchParamsChange({
+      search: value,
+      dateOrder: selectedSorts.date,
+      nameOrder: selectedSorts.name,
+    });
+  };
+
+  const handleSort = (sortType: SortType, sortOrder: SortOrder) => {
+    const newSorts = {
+      ...selectedSorts,
+      [sortType]: sortOrder,
+    };
+    setSelectedSorts(newSorts);
+    onSearchParamsChange({
+      search: searchQuery,
+      dateOrder: newSorts.date,
+      nameOrder: newSorts.name,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4 p-4 bg-background">
       <div className="flex justify-between items-center gap-4 bg-background">
@@ -34,15 +62,14 @@ export default function Header() {
         <div className="items-center gap-2 md:flex hidden">
           <FilterDropdown
             selectedSorts={selectedSorts}
-            onSort={(sortType: SortType, sortOrder: SortOrder) => {
-              if (sortType === "date") {
-                setSelectedSorts({ ...selectedSorts, date: sortOrder });
-              } else if (sortType === "name") {
-                setSelectedSorts({ ...selectedSorts, name: sortOrder });
-              }
-            }}
+            onSort={handleSort}
           />
-          <Input placeholder="Search" className="lg:w-[75vh] w-[40vh]" />
+          <Input 
+            placeholder="Search" 
+            className="lg:w-[75vh] w-[40vh]"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
           <Button variant="default" onClick={() => handleSignUp()}>
             Search
           </Button>

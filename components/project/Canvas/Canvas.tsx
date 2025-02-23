@@ -220,9 +220,44 @@ export default function App() {
     if (!reactflowViewport) return;
 
     setIsDownloading(true);
+
+    // Temporarily disable animations on edges
+    const edgeElements = reactflowViewport.querySelectorAll('.react-flow__edge');
+    edgeElements.forEach(edge => {
+      edge.classList.add('!animate-none');
+      // Force edge paths to be visible
+      const paths = edge.querySelectorAll('path');
+      paths.forEach(path => {
+        path.style.strokeOpacity = '1';
+        path.style.stroke = 'currentColor';
+      });
+      // Force markers to be visible
+      const markers = edge.querySelectorAll('marker');
+      markers.forEach(marker => {
+        marker.style.opacity = '1';
+        marker.style.fill = 'currentColor';
+      });
+    });
+
     const width = reactflowViewport.clientWidth;
     const height = reactflowViewport.clientHeight;
     const { x, y, zoom } = reactFlowInstance.getViewport();
+
+    // Get all edges and set them to the current state
+    const currentEdges = reactFlowInstance.getEdges();
+    currentEdges.forEach(edge => {
+      const edgeElement = document.querySelector(`[data-id="${edge.id}"]`);
+      if (edgeElement) {
+        edgeElement.classList.add('!animate-none');
+        // Force edge paths to be visible
+        const paths = edgeElement.querySelectorAll('path');
+        paths.forEach(path => {
+          path.style.strokeOpacity = '1';
+          path.style.strokeWidth = '1';
+          path.style.stroke = 'currentColor';
+        });
+      }
+    });
 
     toPng(reactflowViewport, {
       backgroundColor: "white",
@@ -233,6 +268,10 @@ export default function App() {
         height: height.toString(),
         transform: `translate(${x}px, ${y}px) scale(${zoom})`,
       },
+      filter: (node) => {
+        // Include edges in the export
+        return node.classList?.contains('react-flow__edge') || !node.classList?.contains('react-flow__edge');
+      },
     })
       .then((data) => {
         const a = document.createElement("a");
@@ -241,6 +280,37 @@ export default function App() {
         a.click();
       })
       .finally(() => {
+        // Re-enable animations and restore styles
+        edgeElements.forEach(edge => {
+          edge.classList.remove('!animate-none');
+          const paths = edge.querySelectorAll('path');
+          paths.forEach(path => {
+            path.style.removeProperty('stroke-opacity');
+            path.style.removeProperty('stroke');
+          });
+          const markers = edge.querySelectorAll('marker');
+          markers.forEach(marker => {
+            marker.style.removeProperty('opacity');
+            marker.style.removeProperty('fill');
+          });
+        });
+        // Re-enable animations and restore styles for specific edges
+        currentEdges.forEach(edge => {
+          const edgeElement = document.querySelector(`[data-id="${edge.id}"]`);
+          if (edgeElement) {
+            edgeElement.classList.remove('!animate-none');
+            const paths = edgeElement.querySelectorAll('path');
+            paths.forEach(path => {
+              path.style.removeProperty('stroke-opacity');
+              path.style.removeProperty('stroke');
+            });
+            const markers = edgeElement.querySelectorAll('marker');
+            markers.forEach(marker => {
+              marker.style.removeProperty('opacity');
+              marker.style.removeProperty('fill');
+            });
+          }
+        });
         setIsDownloading(false);
       });
   };

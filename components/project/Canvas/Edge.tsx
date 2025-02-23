@@ -22,7 +22,7 @@ export default function DatabaseSchemaEdge({
 }: EdgeProps) {
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedLabel, setEditedLabel] = useState(String(label || ''));
+  const [editedLabel, setEditedLabel] = useState(String(label || ""));
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -55,6 +55,12 @@ export default function DatabaseSchemaEdge({
   };
 
   const saveLabel = () => {
+    if (!editedLabel.trim()) {
+      setEditedLabel(String(label || ""));
+      setIsEditing(false);
+      return;
+    }
+
     setEdges((edges) =>
       edges.map((edge) =>
         edge.id === id ? { ...edge, label: editedLabel } : edge
@@ -62,14 +68,15 @@ export default function DatabaseSchemaEdge({
     );
     setIsEditing(false);
   };
-
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
+      e.preventDefault();
       saveLabel();
     }
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
+      e.preventDefault();
       setIsEditing(false);
-      setEditedLabel(String(label || ''));
+      setEditedLabel(String(label || ""));
     }
   };
 
@@ -80,7 +87,7 @@ export default function DatabaseSchemaEdge({
         <div
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            pointerEvents: 'all'
+            pointerEvents: "all",
           }}
           className="nodrag nopan bg-popover text-popover-foreground px-2.5 py-1.5 rounded-md text-xs font-medium border shadow-sm absolute z-10 hover:cursor-pointer hover:bg-accent"
           onDoubleClick={onLabelDoubleClick}

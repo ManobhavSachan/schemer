@@ -10,6 +10,7 @@ import { useState } from "react";
 import { FilterDropdown, SortType, SortOrder } from "./FilterDropdown";
 import { CreateProject } from "./CreateProject";
 import { SearchParams } from "@/types/search-params";
+import debounce from "lodash/debounce";
 
 interface HeaderProps {
   onSearchParamsChange: (params: SearchParams) => void;
@@ -33,13 +34,19 @@ export default function Header({ onSearchParamsChange }: HeaderProps) {
     router.push("/sign-up");
   };
 
+  const debouncedSearch = debounce(
+    (value: string, callback: (params: SearchParams) => void) => {
+      callback({
+        search: value,
+        dateOrder: selectedSorts.date,
+        nameOrder: selectedSorts.name,
+      });
+    },
+    300
+  );
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    onSearchParamsChange({
-      search: value,
-      dateOrder: selectedSorts.date,
-      nameOrder: selectedSorts.name,
-    });
+    debouncedSearch(value, onSearchParamsChange);
   };
 
   const handleSort = (sortType: SortType, sortOrder: SortOrder) => {
@@ -60,17 +67,14 @@ export default function Header({ onSearchParamsChange }: HeaderProps) {
       <div className="flex justify-between items-center gap-4 bg-background">
         <CreateProject />
         <div className="items-center gap-2 md:flex hidden">
-          <FilterDropdown
-            selectedSorts={selectedSorts}
-            onSort={handleSort}
-          />
-          <Input 
-            placeholder="Search" 
+          <FilterDropdown selectedSorts={selectedSorts} onSort={handleSort} />
+          <Input
+            placeholder="Search"
             className="lg:w-[75vh] w-[40vh]"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
           />
-          <Button variant="default" onClick={() => handleSignUp()}>
+          <Button variant="default" onClick={() => handleSearch(searchQuery)}>
             Search
           </Button>
         </div>

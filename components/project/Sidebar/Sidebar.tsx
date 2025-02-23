@@ -3,27 +3,31 @@ import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { Group } from "./Group";
 import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
-import { useRef } from "react";
 
 export function AppSidebar() {
   const nodes = useNodes();
   const edges = useEdges();
   const { addNodes } = useReactFlow();
 
-  const yPos = useRef(0);
   const handleAddTable = () => {
     // Add a new table node at a fixed position
+    const spacing = { x: 250, y: 100 };
+    const tableCount = nodes.length;
     const newNode = {
       id: `${nodes.length + 1}`,
-      position: { x: 100, y: yPos.current },
+      position: {
+        x: 100 + (tableCount % 3) * spacing.x,
+        y: Math.floor(tableCount / 3) * spacing.y,
+      },
       type: "databaseSchema",
       data: {
-        label: `Table ${nodes.length + 1}`,
-        schema: [{ title: "id", type: "uuid" }],
+        label: `Table ${tableCount + 1}`,
+        schema: [
+          { title: "id", type: "uuid" },
+          { title: "created_at", type: "timestamp" },
+        ],
       },
     };
-
-    yPos.current += 10;
     addNodes(newNode);
   };
 
@@ -48,7 +52,7 @@ export function AppSidebar() {
             + Table
           </Button>
         </div>
-        <Group  />
+        <Group />
       </SidebarContent>
     </Sidebar>
   );

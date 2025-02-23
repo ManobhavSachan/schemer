@@ -15,7 +15,11 @@ const DeleteTableButton = ({ onDelete }: { onDelete: () => void }) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger className="flex flex-row justify-center items-center">
-        <button className="opacity-0 group-hover/collapsible:opacity-100 hover:text-destructive transition-opacity">
+        <button
+          aria-label="Delete table"
+          title="Delete table"
+          className="opacity-0 group-hover/collapsible:opacity-100 hover:text-destructive transition-opacity"
+        >
           <Trash2 className="h-5 w-5 items-center justify-center" />
         </button>
       </AlertDialogTrigger>
@@ -29,7 +33,12 @@ const DeleteTableButton = ({ onDelete }: { onDelete: () => void }) => {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          <AlertDialogAction
+            onClick={onDelete}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

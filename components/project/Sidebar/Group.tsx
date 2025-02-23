@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, type LucideIcon, X } from "lucide-react";
+import { ChevronRight, type LucideIcon, X, Trash2, Pencil } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,9 +19,14 @@ import { DatabaseSchemaNode } from "@/components/database-schema-node";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useReactFlow } from "@xyflow/react";
+import { useNodes, useReactFlow } from "@xyflow/react";
+import { useToast } from "@/hooks/use-toast";
+import DeleteTableButton from "./DeleteTableButton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
+export function Group() {
+  const { toast } = useToast();
+  const nodes = useNodes() as DatabaseSchemaNode[];
   const { setNodes } = useReactFlow();
   // Track open state for each table
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
@@ -36,16 +41,17 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
     field: "title" | "type";
     value: string;
   } | null>(null);
+  const [editingTableId, setEditingTableId] = useState<string | null>(null);
 
   // Update open states and scroll to selected table
   useEffect(() => {
     const newOpenStates = { ...openStates };
-    tables.forEach((table) => {
-      if (table.selected) {
-        newOpenStates[table.id] = true;
+    nodes.forEach((node) => {
+      if (node.selected) {
+        newOpenStates[node.id] = true;
         // Scroll the selected table into view
         setTimeout(() => {
-          tableRefs.current[table.id]?.scrollIntoView({
+          tableRefs.current[node.id]?.scrollIntoView({
             behavior: "smooth",
             block: "center",
           });
@@ -53,16 +59,20 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
       }
     });
     setOpenStates(newOpenStates);
-  }, [tables]);
+  }, [nodes]);
 
   // Filter tables based on search query
-  const filteredTables = tables.filter((table) =>
-    table.data.label.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTables = nodes.filter((node) =>
+    node.data.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleAddIndex = (tableId: string) => {
+    handleComingSoonTab();
+  };
 
   const handleAddColumn = (tableId: string) => {
     // Find the table in the tables array
-    const table = tables.find((t) => t.id === tableId);
+    const table = nodes.find((n) => n.id === tableId);
     if (!table) return;
 
     // Create a new column with default values
@@ -97,11 +107,14 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
     setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === tableId) {
-          const updatedSchema = node.data.schema as any[];
-          updatedSchema.map((col) =>
-            col.title === oldTitle ? { ...col, [field]: value } : col
-          );
-          console.log("updatedSchema", updatedSchema, oldTitle);
+          const updatedSchema = (
+            node.data.schema as DatabaseSchemaNode["data"]["schema"]
+          ).map((col) => {
+            if (col.title === oldTitle) {
+              return { ...col, [field]: value };
+            }
+            return col;
+          });
           return {
             ...node,
             data: {
@@ -139,17 +152,71 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
 
   const handleCollapseAll = () => {
     // Create an object with all table IDs set to false
-    const allClosed = tables.reduce((acc, table) => {
-      acc[table.id] = false;
+    const allClosed = nodes.reduce((acc, node) => {
+      acc[node.id] = false;
       return acc;
     }, {} as Record<string, boolean>);
 
     setOpenStates(allClosed);
   };
 
+  const handleDeleteTable = (tableId: string) => {
+    setNodes((nodes) => nodes.filter((node) => node.id !== tableId));
+  };
+
+  const handleEditTable = (tableId: string) => {
+    setEditingTableId(tableId);
+  };
+
+  const handleTableLabelEdit = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    tableId: string,
+    currentValue: string
+  ) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault();
+      e.currentTarget.blur();
+      if (e.key === "Enter" && e.currentTarget.value !== currentValue) {
+        setNodes((nodes) =>
+          nodes.map((node) =>
+            node.id === tableId
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    label: e.currentTarget.value,
+                  },
+                }
+              : node
+          )
+        );
+      }
+      setEditingTableId(null);
+    }
+  };
+
+  // Add handler for coming soon tabs
+  const handleComingSoonTab = () => {
+    toast({
+      title: "Coming soon",
+      description: "This feature is currently under development",
+    });
+  };
+
   return (
     <SidebarGroup>
-      <div className="px-3 py-2 relative -mt-5 mb-1 flex flex-row gap-2">
+      <Tabs defaultValue="tables" className="-mt-5 mb-1 mx-2">
+        <TabsList className="w-full grid grid-cols-3">
+          <TabsTrigger value="tables">Tables</TabsTrigger>
+          <TabsTrigger value="relations" onClick={handleComingSoonTab}>
+            Relations
+          </TabsTrigger>
+          <TabsTrigger value="enums" onClick={handleComingSoonTab}>
+            Enums
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <div className="px-3 py-2 relative mb-1 flex flex-row gap-2">
         <div className="flex-1">
           <Input
             type="text"
@@ -199,15 +266,56 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
             >
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip={table.data.label}>
-                  <span>{table.data.label}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  {editingTableId === table.id ? (
+                    <Input
+                      value={table.data.label}
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        setNodes((nodes) =>
+                          nodes.map((node) =>
+                            node.id === table.id
+                              ? {
+                                  ...node,
+                                  data: {
+                                    ...node.data,
+                                    label: e.target.value,
+                                  },
+                                }
+                              : node
+                          )
+                        );
+                      }}
+                      onKeyDown={(e) =>
+                        handleTableLabelEdit(e, table.id, table.data.label)
+                      }
+                      onBlur={() => setEditingTableId(null)}
+                      className="h-7 ring-0 focus-visible:ring-0 w-full border-none outline-none"
+                    />
+                  ) : (
+                    <span>{table.data.label}</span>
+                  )}
+                  <div className="ml-auto flex items-center gap-1">
+                    <DeleteTableButton
+                      onDelete={() => handleDeleteTable(table.id)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditTable(table.id)}
+                      className="hover:opacity-50"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <ChevronRight className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </div>
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {table.data.schema.map((subItem) => (
                     <SidebarMenuSubItem
-                      key={subItem.title}
+                      key={`${subItem.title}-${subItem.type}`}
                       className="flex flex-col gap-2 hover:bg-transparent !data-[state=selected]:bg-transparent"
                     >
                       <SidebarMenuSubButton
@@ -217,6 +325,7 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
                         <div className="flex flex-row justify-between h-8 gap-2">
                           <Input
                             value={
+                              editingValues?.tableId === table.id &&
                               editingValues?.columnTitle === subItem.title &&
                               editingValues?.field === "title"
                                 ? editingValues.value
@@ -244,6 +353,7 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
                           />
                           <Input
                             value={
+                              editingValues?.tableId === table.id &&
                               editingValues?.columnTitle === subItem.title &&
                               editingValues?.field === "type"
                                 ? editingValues.value
@@ -273,13 +383,22 @@ export function Group({ tables }: { tables: DatabaseSchemaNode[] }) {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
-                  <Button
-                    onClick={() => handleAddColumn(table.id)}
-                    className="w-full mt-1"
-                    variant="outline"
-                  >
-                    + Column
-                  </Button>
+                  <div className="flex flex-row justify-between mt-1 gap-2">
+                    <Button
+                      onClick={() => handleAddIndex(table.id)}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      + Index
+                    </Button>
+                    <Button
+                      onClick={() => handleAddColumn(table.id)}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      + Column
+                    </Button>
+                  </div>
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>

@@ -207,7 +207,6 @@ export default function App() {
       const nodesPositionData = nodes.reduce((a, b) => {
         return { ...a, [b.id]: b.position };
       }, {});
-      console.log("nodesPositionData", nodesPositionData);
       // setStoredPositions(nodesPositionData)
     }
   };

@@ -50,7 +50,7 @@ export function AppSidebar() {
             + Table
           </Button>
         </div>
-        <Group tables={nodes as DatabaseSchemaNode[]} />
+        <Group  />
       </SidebarContent>
     </Sidebar>
   );

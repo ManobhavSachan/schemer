@@ -21,6 +21,7 @@ const LabeledHandle = React.forwardRef<
       handleClassName?: string;
       labelClassName?: string;
       nodeId: string;
+      field?: "title" | "type";
     }
 >(
   (
@@ -31,6 +32,7 @@ const LabeledHandle = React.forwardRef<
       title: initialTitle,
       position,
       nodeId,
+      field = "title",
       ...props
     },
     ref
@@ -55,10 +57,11 @@ const LabeledHandle = React.forwardRef<
                 ...node,
                 data: {
                   ...node.data,
-                  schema: [
-                    (node.data.schema as { title: string, type: string }[])
-                    .map((schema: { title: string, type: string }) => schema.title === initialTitle ? { ...schema, title: title } : schema),
-                  ],
+                  schema: (node.data.schema as { title: string, type: string }[]).map((schema) => 
+                    schema.title === initialTitle 
+                      ? { ...schema, [field]: title }
+                      : schema
+                  ),
                 },
               }
             : node

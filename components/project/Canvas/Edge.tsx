@@ -33,9 +33,6 @@ export default function DatabaseSchemaEdge({
     targetPosition,
   });
 
-  // Add this console log to debug
-  console.log('Edge props:', { id, label, data });
-
   // Add default marker end style
   const defaultMarkerEnd: MarkerType = MarkerType.ArrowClosed;
 

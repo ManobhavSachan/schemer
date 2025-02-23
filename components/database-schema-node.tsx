@@ -75,7 +75,7 @@ export function DatabaseSchemaNode({
         <TableBody>
           {data.schema.map((entry) => (
             <TableRow
-              key={entry.title}
+              key={`${entry.title}-${entry.type}`}
               className="relative text-xs flex flex-row justify-between"
             >
               <TableCell className="pl-0 pr-6 font-light">
@@ -83,6 +83,7 @@ export function DatabaseSchemaNode({
                   id={entry.title}
                   nodeId={id}
                   title={entry.title}
+                  field="title"
                   type="target"
                   position={Position.Left}
                   handleClassName="p-5 pl-0 !bg-transparent border !border-none"
@@ -93,6 +94,7 @@ export function DatabaseSchemaNode({
                   id={entry.title}
                   nodeId={id}
                   title={entry.type}
+                  field="type"
                   type="source"
                   position={Position.Right}
                   className="p-0 pr-3"

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -14,13 +14,15 @@ import {
   useReactFlow,
   ControlButton,
   Position,
+  MarkerType,
 } from "@xyflow/react";
 import { DatabaseSchemaNode } from "@/components/database-schema-node";
 import { useTheme } from "next-themes";
 import { toPng } from "html-to-image";
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
-import { Download, LayoutGrid } from "lucide-react";
+import { Download, LayoutGrid, Plus } from "lucide-react";
+import DatabaseSchemaEdge from "./Edge";
 
 // ReactFlow is scaling everything by the factor of 2
 const TABLE_NODE_WIDTH = 320;
@@ -80,6 +82,8 @@ const defaultNodes = [
 const defaultEdges: Edge[] = [
   {
     id: "products-warehouses",
+    type: "databaseSchema",
+    label: "Warehouse",
     source: "1",
     target: "2",
     sourceHandle: "warehouse_id",
@@ -87,10 +91,12 @@ const defaultEdges: Edge[] = [
   },
   {
     id: "products-suppliers",
+    type: "databaseSchema",
     source: "1",
     target: "3",
     sourceHandle: "supplier_id",
     targetHandle: "id",
+    label: "Supplier",
   },
 ];
 
@@ -145,16 +151,36 @@ const nodeTypes = {
   databaseSchema: DatabaseSchemaNode,
 };
 
+const edgeTypes = {
+  databaseSchema: DatabaseSchemaEdge,
+};
+
 export default function App() {
   const { resolvedTheme } = useTheme();
-  const [nodes, , onNodesChange] = useNodesState(defaultNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(defaultNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
   const [, setIsDownloading] = useState(false);
   const reactFlowInstance = useReactFlow();
 
+  const isValidConnection = useCallback(
+    (connection: Connection | Edge) => {
+      // Check if target node already has an incoming connection
+      for (const edge of edges) {
+        if (
+          edge.target === connection.target &&
+          edge.targetHandle === connection.targetHandle
+        ) {
+          return false;
+        }
+      }
+      return true;
+    },
+    [edges]
+  );
+
   const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (params: Connection) => setEdges((els) => addEdge(params, els)),
+    []
   );
 
   useEffect(() => {
@@ -222,16 +248,21 @@ export default function App() {
     <ReactFlow
       defaultNodes={[]}
       defaultEdges={[]}
+      isValidConnection={isValidConnection}
       defaultEdgeOptions={{
-        type: "smoothstep",
+        type: "databaseSchema",
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+        label: "Relationship",
         animated: true,
         deletable: true,
         style: {
-          // stroke: "hsl(var(--border-stronger))",
           strokeWidth: 1,
         },
       }}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
@@ -251,7 +282,12 @@ export default function App() {
         zoomable
         className="border rounded-lg overflow-hidden"
       />
-      <Controls>
+      <Controls
+        showZoom={false}
+        position="top-right"
+        orientation="horizontal"
+        aria-label="Controls"
+      >
         <ControlButton onClick={downloadImage}>
           <Download />
         </ControlButton>

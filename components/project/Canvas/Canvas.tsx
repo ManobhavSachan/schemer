@@ -12,15 +12,18 @@ import {
   Edge,
   Node,
   useReactFlow,
-  ControlButton,
   Position,
+  MarkerType,
 } from "@xyflow/react";
 import { DatabaseSchemaNode } from "@/components/database-schema-node";
 import { useTheme } from "next-themes";
 import { toPng } from "html-to-image";
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
-import { Download, LayoutGrid } from "lucide-react";
+import { ArrowDownToLine, LayoutGrid, Maximize2, Save } from "lucide-react";
+import DatabaseSchemaEdge from "./Edge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // ReactFlow is scaling everything by the factor of 2
 const TABLE_NODE_WIDTH = 320;
@@ -80,6 +83,8 @@ const defaultNodes = [
 const defaultEdges: Edge[] = [
   {
     id: "products-warehouses",
+    type: "databaseSchema",
+    label: "Warehouse",
     source: "1",
     target: "2",
     sourceHandle: "warehouse_id",
@@ -87,10 +92,12 @@ const defaultEdges: Edge[] = [
   },
   {
     id: "products-suppliers",
+    type: "databaseSchema",
     source: "1",
     target: "3",
     sourceHandle: "supplier_id",
     targetHandle: "id",
+    label: "Supplier",
   },
 ];
 
@@ -145,15 +152,36 @@ const nodeTypes = {
   databaseSchema: DatabaseSchemaNode,
 };
 
+const edgeTypes = {
+  databaseSchema: DatabaseSchemaEdge,
+};
+
 export default function App() {
   const { resolvedTheme } = useTheme();
+  const { toast } = useToast();
   const [nodes, , onNodesChange] = useNodesState(defaultNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
   const [, setIsDownloading] = useState(false);
   const reactFlowInstance = useReactFlow();
 
+  const isValidConnection = useCallback(
+    (connection: Connection | Edge) => {
+      // Check if target node already has an incoming connection
+      for (const edge of edges) {
+        if (
+          edge.target === connection.target &&
+          edge.targetHandle === connection.targetHandle
+        ) {
+          return false;
+        }
+      }
+      return true;
+    },
+    [edges]
+  );
+
   const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => setEdges((els) => addEdge(params, els)),
     [setEdges]
   );
 
@@ -176,14 +204,13 @@ export default function App() {
   };
 
   const saveNodePositions = () => {
-    const nodes = reactFlowInstance.getNodes();
-    if (nodes.length > 0) {
-      const nodesPositionData = nodes.reduce((a, b) => {
-        return { ...a, [b.id]: b.position };
-      }, {});
-      console.log("nodesPositionData", nodesPositionData);
-      // setStoredPositions(nodesPositionData)
-    }
+    //   const nodes = reactFlowInstance.getNodes();
+    //   if (nodes.length > 0) {
+    //     const nodesPositionData = nodes.reduce((a, b) => {
+    //       return { ...a, [b.id]: b.position };
+    //     }, {});
+    //     // setStoredPositions(nodesPositionData)
+    //   }
   };
 
   const downloadImage = () => {
@@ -193,9 +220,44 @@ export default function App() {
     if (!reactflowViewport) return;
 
     setIsDownloading(true);
+
+    // Temporarily disable animations on edges
+    const edgeElements = reactflowViewport.querySelectorAll('.react-flow__edge');
+    edgeElements.forEach(edge => {
+      edge.classList.add('!animate-none');
+      // Force edge paths to be visible
+      const paths = edge.querySelectorAll('path');
+      paths.forEach(path => {
+        path.style.strokeOpacity = '1';
+        path.style.stroke = 'currentColor';
+      });
+      // Force markers to be visible
+      const markers = edge.querySelectorAll('marker');
+      markers.forEach(marker => {
+        marker.style.opacity = '1';
+        marker.style.fill = 'currentColor';
+      });
+    });
+
     const width = reactflowViewport.clientWidth;
     const height = reactflowViewport.clientHeight;
     const { x, y, zoom } = reactFlowInstance.getViewport();
+
+    // Get all edges and set them to the current state
+    const currentEdges = reactFlowInstance.getEdges();
+    currentEdges.forEach(edge => {
+      const edgeElement = document.querySelector(`[data-id="${edge.id}"]`);
+      if (edgeElement) {
+        edgeElement.classList.add('!animate-none');
+        // Force edge paths to be visible
+        const paths = edgeElement.querySelectorAll('path');
+        paths.forEach(path => {
+          path.style.strokeOpacity = '1';
+          path.style.strokeWidth = '1';
+          path.style.stroke = 'currentColor';
+        });
+      }
+    });
 
     toPng(reactflowViewport, {
       backgroundColor: "white",
@@ -206,6 +268,10 @@ export default function App() {
         height: height.toString(),
         transform: `translate(${x}px, ${y}px) scale(${zoom})`,
       },
+      filter: (node) => {
+        // Include edges in the export
+        return node.classList?.contains('react-flow__edge') || !node.classList?.contains('react-flow__edge');
+      },
     })
       .then((data) => {
         const a = document.createElement("a");
@@ -214,6 +280,37 @@ export default function App() {
         a.click();
       })
       .finally(() => {
+        // Re-enable animations and restore styles
+        edgeElements.forEach(edge => {
+          edge.classList.remove('!animate-none');
+          const paths = edge.querySelectorAll('path');
+          paths.forEach(path => {
+            path.style.removeProperty('stroke-opacity');
+            path.style.removeProperty('stroke');
+          });
+          const markers = edge.querySelectorAll('marker');
+          markers.forEach(marker => {
+            marker.style.removeProperty('opacity');
+            marker.style.removeProperty('fill');
+          });
+        });
+        // Re-enable animations and restore styles for specific edges
+        currentEdges.forEach(edge => {
+          const edgeElement = document.querySelector(`[data-id="${edge.id}"]`);
+          if (edgeElement) {
+            edgeElement.classList.remove('!animate-none');
+            const paths = edgeElement.querySelectorAll('path');
+            paths.forEach(path => {
+              path.style.removeProperty('stroke-opacity');
+              path.style.removeProperty('stroke');
+            });
+            const markers = edgeElement.querySelectorAll('marker');
+            markers.forEach(marker => {
+              marker.style.removeProperty('opacity');
+              marker.style.removeProperty('fill');
+            });
+          }
+        });
         setIsDownloading(false);
       });
   };
@@ -222,16 +319,21 @@ export default function App() {
     <ReactFlow
       defaultNodes={[]}
       defaultEdges={[]}
+      isValidConnection={isValidConnection}
       defaultEdgeOptions={{
-        type: "smoothstep",
+        type: "databaseSchema",
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+        label: "Relationship",
         animated: true,
         deletable: true,
         style: {
-          // stroke: "hsl(var(--border-stronger))",
           strokeWidth: 1,
         },
       }}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
@@ -251,13 +353,53 @@ export default function App() {
         zoomable
         className="border rounded-lg overflow-hidden"
       />
-      <Controls>
-        <ControlButton onClick={downloadImage}>
-          <Download />
-        </ControlButton>
-        <ControlButton onClick={resetLayout}>
-          <LayoutGrid />
-        </ControlButton>
+      <Controls
+        showZoom={false}
+        showFitView={false}
+        showInteractive={false}
+        position="top-right"
+        orientation="horizontal"
+        aria-label="Controls"
+        className="flex gap-1.5 bg-background backdrop-blur-sm border rounded-md p-1"
+      >
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={() =>
+            toast({
+              title: "Coming soon",
+              description: "This feature is not available yet",
+            })
+          }
+          title="Center View"
+        >
+          <Save className="h-4 w-4" />
+        </Button>
+
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={() => reactFlowInstance.fitView({})}
+          title="Center View"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={resetLayout}
+          title="Reset Layout"
+        >
+          <LayoutGrid className="h-4 w-4" />
+        </Button>
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={downloadImage}
+          title="Download as PNG"
+        >
+          <ArrowDownToLine className="h-4 w-4" />
+        </Button>
       </Controls>
     </ReactFlow>
   );

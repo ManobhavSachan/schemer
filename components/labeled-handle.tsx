@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { HandleProps } from "@xyflow/react";
-
+import { HandleProps, useReactFlow } from "@xyflow/react";
 import { BaseHandle } from "@/components/base-handle";
 
 const flexDirections = {
@@ -20,27 +19,101 @@ const LabeledHandle = React.forwardRef<
       title: string;
       handleClassName?: string;
       labelClassName?: string;
+      nodeId: string;
+      field?: "title" | "type";
     }
 >(
   (
-    { className, labelClassName, handleClassName, title, position, ...props },
-    ref,
-  ) => (
-    <div
-      ref={ref}
-      title={title}
-      className={cn(
-        "relative flex items-center",
-        flexDirections[position],
-        className,
-      )}
-    >
-      <BaseHandle position={position} className={handleClassName} {...props} />
-      <label className={cn("px-3 text-foreground", labelClassName)}>
-        {title}
-      </label>
-    </div>
-  ),
+    {
+      className,
+      labelClassName,
+      handleClassName,
+      title: initialTitle,
+      position,
+      nodeId,
+      field = "title",
+      ...props
+    },
+    ref
+  ) => {
+    const { setNodes } = useReactFlow();
+    const [isEditing, setIsEditing] = useState(false);
+    const [title, setTitle] = useState(initialTitle);
+
+    const handleDoubleClick = () => {
+      setIsEditing(true);
+    };
+
+    const handleBlur = () => {
+      setIsEditing(false);
+    };
+
+    const saveLabel = () => {
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  schema: (node.data.schema as { title: string, type: string }[]).map((schema) => 
+                    schema.title === initialTitle 
+                      ? { ...schema, [field]: title }
+                      : schema
+                  ),
+                },
+              }
+            : node
+        )
+      );
+    };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        (e.target as HTMLInputElement).blur();
+        saveLabel();
+      }
+    };
+
+    return (
+      <div
+        ref={ref}
+        title={title}
+        className={cn(
+          "relative flex items-center",
+          flexDirections[position],
+          className
+        )}
+      >
+        <BaseHandle
+          position={position}
+          className={handleClassName}
+          {...props}
+        />
+        {isEditing ? (
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "px-3 bg-transparent border-none outline-none text-foreground",
+              labelClassName
+            )}
+            autoFocus
+          />
+        ) : (
+          <label
+            className={cn("px-3 text-foreground cursor-text", labelClassName)}
+            onDoubleClick={handleDoubleClick}
+          >
+            {title}
+          </label>
+        )}
+      </div>
+    );
+  }
 );
 
 LabeledHandle.displayName = "LabeledHandle";

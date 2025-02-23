@@ -219,7 +219,7 @@ export function Group() {
         </TabsList>
       </Tabs>
       <div className="px-3 py-2 relative mb-1 flex flex-row gap-2">
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <Input
             type="text"
             placeholder="Search tables..."
@@ -230,7 +230,7 @@ export function Group() {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-5 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-md"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-md"
             >
               <X className="h-4 w-4 text-muted-foreground" />
             </button>

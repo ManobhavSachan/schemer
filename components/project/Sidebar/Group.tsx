@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, type LucideIcon, X, Trash2, Pencil } from "lucide-react";
+import { ChevronRight, X, Pencil } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { useNodes, useReactFlow } from "@xyflow/react";
 import { useToast } from "@/hooks/use-toast";
 import DeleteTableButton from "./DeleteTableButton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function Group() {
   const { toast } = useToast();
@@ -59,6 +59,7 @@ export function Group() {
       }
     });
     setOpenStates(newOpenStates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes]);
 
   // Filter tables based on search query
@@ -67,6 +68,7 @@ export function Group() {
   );
 
   const handleAddIndex = (tableId: string) => {
+    console.log("add index", tableId);
     handleComingSoonTab();
   };
 

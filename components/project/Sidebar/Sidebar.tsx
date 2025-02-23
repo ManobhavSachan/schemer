@@ -1,9 +1,7 @@
 "use client";
-import { BookOpen, Bot, Settings2, SquareTerminal } from "lucide-react";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { Group } from "./Group";
 import { useEdges, useNodes, useReactFlow } from "@xyflow/react";
-import { DatabaseSchemaNode } from "@/components/database-schema-node";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 

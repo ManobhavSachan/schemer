@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { HandleProps, useReactFlow } from "@xyflow/react";
-import { DatabaseSchemaNode } from "@/components/database-schema-node";
 import { BaseHandle } from "@/components/base-handle";
 
 const flexDirections = {

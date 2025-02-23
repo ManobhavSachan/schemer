@@ -19,7 +19,6 @@ export default function DatabaseSchemaEdge({
   style = {},
   markerEnd,
   label,
-  data,
 }: EdgeProps) {
   const { setEdges } = useReactFlow();
   const [isEditing, setIsEditing] = useState(false);
@@ -42,9 +41,9 @@ export default function DatabaseSchemaEdge({
     markerEnd: markerEnd || defaultMarkerEnd,
   };
 
-  const onEdgeClick = () => {
-    setEdges((edges) => edges.filter((edge) => edge.id !== id));
-  };
+  // const onEdgeClick = () => {
+  //   setEdges((edges) => edges.filter((edge) => edge.id !== id));
+  // };
 
   const onLabelDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();

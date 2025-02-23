@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -12,7 +12,6 @@ import {
   Edge,
   Node,
   useReactFlow,
-  ControlButton,
   Position,
   MarkerType,
 } from "@xyflow/react";
@@ -21,8 +20,10 @@ import { useTheme } from "next-themes";
 import { toPng } from "html-to-image";
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
-import { Download, LayoutGrid, Plus } from "lucide-react";
+import { ArrowDownToLine, LayoutGrid, Maximize2, Save } from "lucide-react";
 import DatabaseSchemaEdge from "./Edge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // ReactFlow is scaling everything by the factor of 2
 const TABLE_NODE_WIDTH = 320;
@@ -157,7 +158,8 @@ const edgeTypes = {
 
 export default function App() {
   const { resolvedTheme } = useTheme();
-  const [nodes, setNodes, onNodesChange] = useNodesState(defaultNodes);
+  const { toast } = useToast();
+  const [nodes, , onNodesChange] = useNodesState(defaultNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
   const [, setIsDownloading] = useState(false);
   const reactFlowInstance = useReactFlow();
@@ -180,7 +182,7 @@ export default function App() {
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((els) => addEdge(params, els)),
-    []
+    [setEdges]
   );
 
   useEffect(() => {
@@ -202,13 +204,13 @@ export default function App() {
   };
 
   const saveNodePositions = () => {
-    const nodes = reactFlowInstance.getNodes();
-    if (nodes.length > 0) {
-      const nodesPositionData = nodes.reduce((a, b) => {
-        return { ...a, [b.id]: b.position };
-      }, {});
-      // setStoredPositions(nodesPositionData)
-    }
+    //   const nodes = reactFlowInstance.getNodes();
+    //   if (nodes.length > 0) {
+    //     const nodesPositionData = nodes.reduce((a, b) => {
+    //       return { ...a, [b.id]: b.position };
+    //     }, {});
+    //     // setStoredPositions(nodesPositionData)
+    //   }
   };
 
   const downloadImage = () => {
@@ -283,16 +285,51 @@ export default function App() {
       />
       <Controls
         showZoom={false}
+        showFitView={false}
+        showInteractive={false}
         position="top-right"
         orientation="horizontal"
         aria-label="Controls"
+        className="flex gap-1.5 bg-background backdrop-blur-sm border rounded-md p-1"
       >
-        <ControlButton onClick={downloadImage}>
-          <Download />
-        </ControlButton>
-        <ControlButton onClick={resetLayout}>
-          <LayoutGrid />
-        </ControlButton>
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={() =>
+            toast({
+              title: "Coming soon",
+              description: "This feature is not available yet",
+            })
+          }
+          title="Center View"
+        >
+          <Save className="h-4 w-4" />
+        </Button>
+
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={() => reactFlowInstance.fitView({})}
+          title="Center View"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={resetLayout}
+          title="Reset Layout"
+        >
+          <LayoutGrid className="h-4 w-4" />
+        </Button>
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={downloadImage}
+          title="Download as PNG"
+        >
+          <ArrowDownToLine className="h-4 w-4" />
+        </Button>
       </Controls>
     </ReactFlow>
   );

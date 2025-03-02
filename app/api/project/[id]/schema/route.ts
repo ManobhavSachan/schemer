@@ -136,10 +136,10 @@ export async function PUT(
       });
 
       return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error in transaction:", error);
       
-      if (error.code === 'P2028') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2028') {
         return NextResponse.json(
           { error: "Transaction timed out or was invalidated. Please try again." },
           { status: 500 }

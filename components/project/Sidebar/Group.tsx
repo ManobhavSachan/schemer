@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, X, Pencil, Trash2, GripVertical } from "lucide-react";
+import { ChevronRight, X, Pencil, Trash2, GripVertical, MoreVertical, Check, Key, Fingerprint, AlertCircle, Ban } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -28,9 +28,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { useProject } from "@/app/(app)/project/[project_id]/ctx";
+import { MoreHorizontal } from "lucide-react";
 
 export function Group() {
   const { toast } = useToast();
@@ -59,8 +61,8 @@ export function Group() {
   const [editingValues, setEditingValues] = useState<{
     tableId: string;
     columnTitle: string;
-    field: "title" | "type";
-    value: string;
+    field: "title" | "type" | "isPrimaryKey" | "isUnique" | "isNotNull" | "defaultValue" | "checkExpression";
+    value: string | boolean;
   } | null>(null);
   const [editingTableId, setEditingTableId] = useState<string | null>(null);
   // Add activeTab state to track which tab is selected
@@ -129,6 +131,10 @@ export function Group() {
     const newColumn = {
       title: `New Column ${table.data.schema.length + 1}`,
       type: "text",
+      isPrimaryKey: false,
+      isUnique: false,
+      isNotNull: false,
+      defaultValue: "",
     };
 
     // Update the table's schema
@@ -151,8 +157,8 @@ export function Group() {
   const updateColumnField = (
     tableId: string,
     oldTitle: string,
-    field: "title" | "type",
-    value: string
+    field: "title" | "type" | "isPrimaryKey" | "isUnique" | "isNotNull" | "defaultValue" | "checkExpression",
+    value: string | boolean
   ) => {
     setNodes((nodes) =>
       nodes.map((node) => {
@@ -178,23 +184,30 @@ export function Group() {
     );
   };
 
+  // Update the handleKeyDown function to handle boolean values
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     tableId: string,
     columnTitle: string,
-    field: "title" | "type",
-    currentValue: string
+    field: "title" | "type" | "isPrimaryKey" | "isUnique" | "isNotNull" | "defaultValue" | "checkExpression",
+    currentValue: string | boolean
   ) => {
     if (e.key === "Enter" || e.key === "Escape") {
       e.preventDefault();
       e.currentTarget.blur();
       if (e.key === "Enter" && editingValues?.value !== currentValue) {
-        updateColumnField(
-          tableId,
-          columnTitle,
-          field,
-          editingValues?.value || currentValue
-        );
+        // Only update if the field is a string type (title, type, defaultValue)
+        if (field === "title" || field === "type" || field === "defaultValue") {
+          if (typeof editingValues?.value === "string") {
+            updateColumnField(
+              tableId,
+              columnTitle,
+              field,
+              editingValues.value
+            );
+          }
+        } 
+        // Boolean fields are handled directly in their respective handlers
       }
       setEditingValues(null);
     }
@@ -723,35 +736,55 @@ export function Group() {
                               >
                                 <GripVertical className="h-3 w-3 text-muted-foreground" />
                               </div>
-                              <Input
-                                value={
-                                  editingValues?.tableId === table.id &&
-                                  editingValues?.columnTitle ===
-                                    subItem.title &&
-                                  editingValues?.field === "title"
-                                    ? editingValues.value
-                                    : subItem.title
-                                }
-                                onChange={(e) =>
-                                  setEditingValues({
-                                    tableId: table.id,
-                                    columnTitle: subItem.title,
-                                    field: "title",
-                                    value: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) =>
-                                  handleKeyDown(
-                                    e,
-                                    table.id,
-                                    subItem.title,
-                                    "title",
-                                    subItem.title
-                                  )
-                                }
-                                onBlur={() => setEditingValues(null)}
-                                className="h-7 flex-1"
-                              />
+                              <div className="flex-1 flex items-center">
+                                <div className="flex gap-0.5 mr-1">
+                                  {subItem.isPrimaryKey && (
+                                    <span title="Primary">
+                                      <Key className="h-3 w-3 text-muted-foreground" />
+                                    </span>
+                                  )}
+                                  {subItem.isUnique && (
+                                    <span title="Unique">
+                                      <Fingerprint className="h-3 w-3 text-muted-foreground" />
+                                    </span>
+                                  )}
+                                  {subItem.isNotNull && (
+                                    <span title="Not Null">
+                                      <Ban className="h-3 w-3 text-muted-foreground" />
+                                    </span>
+                                  )}
+                                </div>
+                                <Input
+                                  value={
+                                    editingValues?.tableId === table.id &&
+                                    editingValues?.columnTitle ===
+                                      subItem.title &&
+                                    editingValues?.field === "title" &&
+                                    typeof editingValues.value === "string"
+                                      ? editingValues.value
+                                      : subItem.title
+                                  }
+                                  onChange={(e) =>
+                                    setEditingValues({
+                                      tableId: table.id,
+                                      columnTitle: subItem.title,
+                                      field: "title",
+                                      value: e.target.value,
+                                    })
+                                  }
+                                  onKeyDown={(e) =>
+                                    handleKeyDown(
+                                      e,
+                                      table.id,
+                                      subItem.title,
+                                      "title",
+                                      subItem.title
+                                    )
+                                  }
+                                  onBlur={() => setEditingValues(null)}
+                                  className="h-7 flex-1"
+                                />
+                              </div>
                             </div>
                             <div className="relative w-[30%]">
                               <DropdownMenu>
@@ -764,9 +797,10 @@ export function Group() {
                                       editingValues?.tableId === table.id &&
                                         editingValues?.columnTitle ===
                                           subItem.title &&
-                                        editingValues?.field === "type"
-                                        ? editingValues.value
-                                        : subItem.type
+                                        editingValues?.field === "type" &&
+                                        typeof editingValues.value === "string"
+                                          ? editingValues.value
+                                          : subItem.type
                                     )}
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                   </Button>
@@ -857,6 +891,241 @@ export function Group() {
                                       ))}
                                     </>
                                   )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                            <div className="ml-1">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 hover:bg-muted"
+                                  >
+                                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <div className="px-2 py-2">
+                                    <div className="text-xs mb-1 font-medium">Default Value</div>
+                                    <Input
+                                      value={subItem.defaultValue || ""}
+                                      placeholder="Set default value..."
+                                      className="h-7 w-full"
+                                      onChange={(e) => {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "defaultValue",
+                                          e.target.value
+                                        );
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          e.currentTarget.blur();
+                                          toast({
+                                            title: "Default Value Set",
+                                            description: `Default value for "${subItem.title}" has been updated`,
+                                          });
+                                        }
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  <div className="px-2 py-2">
+                                    <div className="text-xs mb-1 font-medium">Check Expression</div>
+                                    <Input
+                                      value={subItem.checkExpression || ""}
+                                      placeholder="e.g. value > 0"
+                                      className="h-7 w-full"
+                                      onChange={(e) => {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "checkExpression",
+                                          e.target.value
+                                        );
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          e.currentTarget.blur();
+                                          toast({
+                                            title: "Check Expression Set",
+                                            description: `Check constraint for "${subItem.title}" has been updated`,
+                                          });
+                                        }
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      const isPrimaryKey = subItem.isPrimaryKey || false;
+                                      // When setting primary key, also set unique and not null
+                                      if (!isPrimaryKey) {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isPrimaryKey",
+                                          true
+                                        );
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isUnique",
+                                          true
+                                        );
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isNotNull",
+                                          true
+                                        );
+                                        toast({
+                                          title: "Primary Key Set",
+                                          description: `Column "${subItem.title}" is now a primary key (unique and not null)`,
+                                        });
+                                      } else {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isPrimaryKey",
+                                          false
+                                        );
+                                        toast({
+                                          title: "Primary Key Removed",
+                                          description: `Column "${subItem.title}" is no longer a primary key`,
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-center w-full">
+                                      {subItem.isPrimaryKey && <Check className="h-4 w-4 mr-2" />}
+                                      <span className="flex items-center">
+                                        <Key className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                        Primary
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      const isUnique = subItem.isUnique || false;
+                                      // If turning off unique and this is a primary key, also turn off primary key
+                                      if (isUnique && subItem.isPrimaryKey) {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isPrimaryKey",
+                                          false
+                                        );
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isUnique",
+                                          false
+                                        );
+                                        toast({
+                                          title: "Unique and Primary Key Constraints Removed",
+                                          description: `Column "${subItem.title}" is no longer unique or a primary key`,
+                                        });
+                                      } else {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isUnique",
+                                          !isUnique
+                                        );
+                                        toast({
+                                          title: isUnique ? "Unique Constraint Removed" : "Unique Constraint Set",
+                                          description: `Column "${subItem.title}" is ${isUnique ? "no longer" : "now"} unique`,
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-center w-full">
+                                      {subItem.isUnique && <Check className="h-4 w-4 mr-2" />}
+                                      <span className="flex items-center">
+                                        <Fingerprint className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                        Unique
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      const isNotNull = subItem.isNotNull || false;
+                                      // If turning off not null and this is a primary key, also turn off primary key
+                                      if (isNotNull && subItem.isPrimaryKey) {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isPrimaryKey",
+                                          false
+                                        );
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isNotNull",
+                                          false
+                                        );
+                                        toast({
+                                          title: "Not Null and Primary Key Constraints Removed",
+                                          description: `Column "${subItem.title}" is no longer not null or a primary key`,
+                                        });
+                                      } else {
+                                        updateColumnField(
+                                          table.id,
+                                          subItem.title,
+                                          "isNotNull",
+                                          !isNotNull
+                                        );
+                                        toast({
+                                          title: isNotNull ? "Not Null Constraint Removed" : "Not Null Constraint Set",
+                                          description: `Column "${subItem.title}" is ${isNotNull ? "no longer" : "now"} not null`,
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-center w-full">
+                                      {subItem.isNotNull && <Check className="h-4 w-4 mr-2" />}
+                                      <span className="flex items-center">
+                                        <Ban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                        Not Null
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onSelect={() => {
+                                      // Delete the column
+                                      setNodes((nodes) =>
+                                        nodes.map((node) => {
+                                          if (node.id === table.id) {
+                                            const updatedSchema = (
+                                              node.data.schema as DatabaseSchemaNode["data"]["schema"]
+                                            ).filter((col) => col.title !== subItem.title);
+                                            return {
+                                              ...node,
+                                              data: {
+                                                ...node.data,
+                                                schema: updatedSchema,
+                                              },
+                                            };
+                                          }
+                                          return node;
+                                        })
+                                      );
+                                      toast({
+                                        title: "Column Deleted",
+                                        description: `Column "${subItem.title}" has been deleted`,
+                                      });
+                                    }}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>

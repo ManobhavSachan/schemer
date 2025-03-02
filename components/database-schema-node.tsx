@@ -8,7 +8,15 @@ import { LabeledHandle } from "@/components/labeled-handle";
 
 export type DatabaseSchemaNode = Node<{
   label: string;
-  schema: { title: string; type: string }[];
+  schema: { 
+    title: string; 
+    type: string;
+    isPrimaryKey?: boolean;
+    isUnique?: boolean;
+    isNotNull?: boolean;
+    defaultValue?: string;
+    checkExpression?: string;
+  }[];
 }>;
 
 export function DatabaseSchemaNode({

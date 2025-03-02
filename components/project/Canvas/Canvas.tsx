@@ -31,8 +31,8 @@ import { Loader2 } from "lucide-react";
 const TABLE_NODE_WIDTH = 320;
 const TABLE_NODE_ROW_HEIGHT = 40;
 
-const NODE_SEP = 25;
-const RANK_SEP = 50;
+// const NODE_SEP = 25;
+// const RANK_SEP = 50;
 
 const defaultNodes = [
   {
@@ -170,15 +170,15 @@ const edgeTypes = {
 export default function App() {
   const { resolvedTheme } = useTheme();
   const { toast } = useToast();
-  const [nodes, setNodes, onNodesChange] = useNodesState(defaultNodes);
+  const [nodes, , onNodesChange] = useNodesState(defaultNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultEdges);
   const [, setIsDownloading] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const reactFlowInstance = useReactFlow();
   const { 
-    projectId, 
-    enums, 
+    // projectId, 
+    // enums, 
     saveSchema, 
     isSavingSchema, 
     loadSchema, 
@@ -284,6 +284,7 @@ export default function App() {
 
   useEffect(() => {
     fetchAndSetSchema();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetLayout = () => {

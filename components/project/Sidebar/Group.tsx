@@ -10,7 +10,6 @@ import {
   Check,
   Key,
   Fingerprint,
-  AlertCircle,
   Ban,
   Database,
 } from "lucide-react";
@@ -45,7 +44,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { useProject } from "@/app/(app)/project/[project_id]/ctx";
-import { MoreHorizontal } from "lucide-react";
 
 // Add a constant array of database data types
 const DATABASE_DATA_TYPES = [
@@ -677,14 +675,6 @@ export function Group() {
     }, {} as Record<string, boolean>);
 
     setOpenEnumStates(allClosed);
-  };
-
-  // Add handler for coming soon tabs
-  const handleComingSoonTab = () => {
-    toast({
-      title: "Coming soon",
-      description: "This feature is currently under development",
-    });
   };
 
   // Get enum type display name

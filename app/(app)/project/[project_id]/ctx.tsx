@@ -3,6 +3,7 @@
 import { createContext, useContext, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Edge, Node } from "@xyflow/react";
 
 // Define the Enum types
 export type EnumValue = {
@@ -28,9 +29,9 @@ type ProjectContextType = {
   updateEnumValue: (enumId: string, valueId: string, newValue: string) => void;
   deleteEnumValue: (enumId: string, valueId: string) => void;
   // Schema operations
-  saveSchema: (nodes: any[], edges: any[]) => Promise<void>;
+  saveSchema: (nodes: Node[], edges: Edge[]) => Promise<void>;
   isSavingSchema: boolean;
-  loadSchema: () => Promise<{ nodes: any[]; edges: any[] }>;
+  loadSchema: () => Promise<{ nodes: Node[]; edges: Edge[] }>;
   isLoadingSchema: boolean;
 };
 
@@ -48,7 +49,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   // Schema mutations
   const { mutateAsync: saveSchemaAsync, isPending: isSavingSchema } = useMutation({
-    mutationFn: async ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
+    mutationFn: async ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
       const response = await fetch(`/api/project/${projectId}/schema`, {
         method: 'PUT',
         headers: {
@@ -95,7 +96,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   // Schema query
   const { 
-    data: schemaData,
+    // data: schemaData,
     isLoading: isLoadingSchema,
     refetch: refetchSchema
   } = useQuery({
@@ -120,7 +121,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Wrapper function for saving schema
-  const saveSchema = async (nodes: any[], edges: any[]) => {
+  const saveSchema = async (nodes: Node[], edges: Edge[]) => {
     await saveSchemaAsync({ nodes, edges });
   };
 

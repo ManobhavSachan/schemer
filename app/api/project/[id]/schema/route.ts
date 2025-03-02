@@ -30,7 +30,7 @@ export async function PUT(
 
     // Parse the request body
     const body = await request.json();
-    const { nodes, edges, enums } = body;
+    const { nodes, edges } = body;
 
     if (!nodes || !Array.isArray(nodes)) {
       return NextResponse.json(
@@ -223,8 +223,8 @@ export async function GET(
         }));
     });
 
-    console.log("Nodes:", nodes);
-    console.log("Edges:", edges);
+    // console.log("Nodes:", nodes);
+    // console.log("Edges:", edges);
 
     // Ensure we're returning a valid object
     return NextResponse.json({ 

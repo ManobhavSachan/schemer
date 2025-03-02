@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, X, Pencil, Trash2 } from "lucide-react";
+import { ChevronRight, X, Pencil, Trash2, GripVertical } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,18 +37,18 @@ export function Group() {
   const nodes = useNodes() as DatabaseSchemaNode[];
   const edges = useEdges();
   const { setNodes, setEdges } = useReactFlow();
-  
+
   // Use the enum functionality from the ProjectContext
-  const { 
-    enums, 
-    addEnum, 
-    updateEnum, 
-    deleteEnum, 
-    addEnumValue, 
-    updateEnumValue, 
-    deleteEnumValue 
+  const {
+    enums,
+    addEnum,
+    updateEnum,
+    deleteEnum,
+    addEnumValue,
+    updateEnumValue,
+    deleteEnumValue,
   } = useProject();
-  
+
   // Track open state for each table
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
   // Update the ref type to accept HTMLLIElement
@@ -71,11 +71,20 @@ export function Group() {
   const [editingRelationId, setEditingRelationId] = useState<string | null>(
     null
   );
-  
+
   // Local state for UI interactions with enums
   const [editingEnumId, setEditingEnumId] = useState<string | null>(null);
-  const [editingEnumValueId, setEditingEnumValueId] = useState<string | null>(null);
-  const [openEnumStates, setOpenEnumStates] = useState<Record<string, boolean>>({});
+  const [editingEnumValueId, setEditingEnumValueId] = useState<string | null>(
+    null
+  );
+  const [openEnumStates, setOpenEnumStates] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [draggedColumn, setDraggedColumn] = useState<{
+    tableId: string;
+    columnIndex: number;
+    columnTitle: string;
+  } | null>(null);
 
   // Update open states and scroll to selected table
   useEffect(() => {
@@ -100,7 +109,7 @@ export function Group() {
   const filteredTables = nodes.filter((node) =>
     node.data.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   // Filter enums based on search query
   const filteredEnums = enums.filter((enumItem) =>
     enumItem.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -315,25 +324,25 @@ export function Group() {
   const handleAddEnum = () => {
     const newEnumName = `NewEnum${enums.length + 1}`;
     addEnum(newEnumName);
-    
+
     // Open the new enum in the UI
     const newEnumId = `enum-${Date.now()}`;
     setOpenEnumStates((prev) => ({
       ...prev,
       [newEnumId]: true,
     }));
-    
+
     toast({
       title: "Enum created",
       description: `New enum "${newEnumName}" has been created`,
     });
   };
-  
+
   // Handler for editing an enum name
   const handleEditEnum = (enumId: string) => {
     setEditingEnumId(enumId);
   };
-  
+
   // Handler for enum name edit
   const handleEnumNameEdit = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -349,7 +358,7 @@ export function Group() {
       setEditingEnumId(null);
     }
   };
-  
+
   // Handler for deleting an enum
   const handleDeleteEnum = (enumId: string) => {
     deleteEnum(enumId);
@@ -358,15 +367,15 @@ export function Group() {
       description: "The enum has been removed",
     });
   };
-  
+
   // Handler for adding a new enum value
   const handleAddEnumValue = (enumId: string) => {
-    const enumItem = enums.find(e => e.id === enumId);
+    const enumItem = enums.find((e) => e.id === enumId);
     if (enumItem) {
       addEnumValue(enumId, `VALUE_${enumItem.values.length + 1}`);
     }
   };
-  
+
   // Handler for editing an enum value
   const handleEditEnumValue = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -383,19 +392,19 @@ export function Group() {
       setEditingEnumValueId(null);
     }
   };
-  
+
   // Handler for deleting an enum value
   const handleDeleteEnumValue = (enumId: string, valueId: string) => {
     deleteEnumValue(enumId, valueId);
   };
-  
+
   // Handler for collapsing all enums
   const handleCollapseAllEnums = () => {
     const allClosed = enums.reduce((acc, enumItem) => {
       acc[enumItem.id] = false;
       return acc;
     }, {} as Record<string, boolean>);
-    
+
     setOpenEnumStates(allClosed);
   };
 
@@ -412,10 +421,102 @@ export function Group() {
     // Check if the type is an enum reference
     if (type.startsWith("enum:")) {
       const enumId = type.split(":")[1];
-      const enumItem = enums.find(e => e.id === enumId);
+      const enumItem = enums.find((e) => e.id === enumId);
       return enumItem ? `enum(${enumItem.name})` : type;
     }
     return type;
+  };
+
+  // Function to reorder columns within a table
+  const reorderColumns = (
+    tableId: string,
+    startIndex: number,
+    endIndex: number
+  ) => {
+    if (startIndex === endIndex) return;
+
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === tableId) {
+          const newSchema = [
+            ...(node.data.schema as DatabaseSchemaNode["data"]["schema"]),
+          ];
+          const [removed] = newSchema.splice(startIndex, 1);
+          newSchema.splice(endIndex, 0, removed);
+
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              schema: newSchema,
+            },
+          };
+        }
+        return node;
+      })
+    );
+
+    toast({
+      title: "Column reordered",
+      description: "The column position has been updated",
+    });
+  };
+
+  // Handle drag start
+  const handleDragStart = (
+    tableId: string,
+    columnIndex: number,
+    columnTitle: string
+  ) => {
+    setDraggedColumn({
+      tableId,
+      columnIndex,
+      columnTitle,
+    });
+  };
+
+  // Handle drag over another column
+  const handleDragOver = (
+    e: React.DragEvent<HTMLLIElement>,
+    tableId: string,
+    columnIndex: number
+  ) => {
+    e.preventDefault();
+
+    if (!draggedColumn || draggedColumn.tableId !== tableId) return;
+
+    if (draggedColumn.columnIndex !== columnIndex) {
+      // Highlight the drop area
+      e.currentTarget.classList.add("bg-muted");
+    }
+  };
+
+  // Handle drag leave
+  const handleDragLeave = (e: React.DragEvent<HTMLLIElement>) => {
+    e.currentTarget.classList.remove("bg-muted");
+  };
+
+  // Handle drop
+  const handleDrop = (
+    e: React.DragEvent<HTMLLIElement>,
+    tableId: string,
+    columnIndex: number
+  ) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove("bg-muted");
+
+    if (!draggedColumn || draggedColumn.tableId !== tableId) return;
+
+    if (draggedColumn.columnIndex !== columnIndex) {
+      reorderColumns(tableId, draggedColumn.columnIndex, columnIndex);
+    }
+
+    setDraggedColumn(null);
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedColumn(null);
   };
 
   return (
@@ -558,44 +659,100 @@ export function Group() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {table.data.schema.map((subItem) => (
+                    {table.data.schema.map((subItem, columnIndex) => (
                       <SidebarMenuSubItem
                         key={`${subItem.title}-${subItem.type}`}
-                        className="flex flex-col gap-2 hover:bg-transparent !data-[state=selected]:bg-transparent"
+                        className={`flex flex-col gap-2 hover:bg-transparent !data-[state=selected]:bg-transparent transition-colors duration-200 ${
+                          draggedColumn?.tableId === table.id &&
+                          draggedColumn?.columnIndex === columnIndex
+                            ? "opacity-50"
+                            : ""
+                        }`}
+                        draggable={true}
+                        onDragStart={(e) => {
+                          // Only allow dragging if initiated from the drag handle or if data-dragging is set
+                          const target = e.target as HTMLElement;
+                          const isDragHandle = target.closest(".drag-handle");
+                          const row = target.closest('[draggable="true"]');
+
+                          if (
+                            !isDragHandle &&
+                            !row?.getAttribute("data-dragging")
+                          ) {
+                            e.preventDefault();
+                            return;
+                          }
+
+                          // Clear the dragging attribute
+                          if (row) {
+                            row.removeAttribute("data-dragging");
+                          }
+
+                          handleDragStart(table.id, columnIndex, subItem.title);
+                        }}
+                        onDragOver={(e) =>
+                          handleDragOver(e, table.id, columnIndex)
+                        }
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, table.id, columnIndex)}
+                        onDragEnd={handleDragEnd}
+                        data-dragged={
+                          draggedColumn?.tableId === table.id &&
+                          draggedColumn?.columnIndex === columnIndex
+                        }
                       >
                         <SidebarMenuSubButton
                           asChild
                           className="hover:bg-transparent active:bg-transparent"
                         >
-                          <div className="flex flex-row justify-between h-8 gap-2">
-                            <Input
-                              value={
-                                editingValues?.tableId === table.id &&
-                                editingValues?.columnTitle === subItem.title &&
-                                editingValues?.field === "title"
-                                  ? editingValues.value
-                                  : subItem.title
-                              }
-                              onChange={(e) =>
-                                setEditingValues({
-                                  tableId: table.id,
-                                  columnTitle: subItem.title,
-                                  field: "title",
-                                  value: e.target.value,
-                                })
-                              }
-                              onKeyDown={(e) =>
-                                handleKeyDown(
-                                  e,
-                                  table.id,
-                                  subItem.title,
-                                  "title",
-                                  subItem.title
-                                )
-                              }
-                              onBlur={() => setEditingValues(null)}
-                              className="h-7 w-[70%]"
-                            />
+                          <div className="flex flex-row justify-between h-8 gap-1">
+                            <div className="flex items-center gap-1 w-[70%]">
+                              <div
+                                className="cursor-grab active:cursor-grabbing pr-1.5 hover:bg-muted rounded drag-handle flex items-center justify-center transition-colors"
+                                onMouseDown={(e) => {
+                                  // Make the entire row draggable when clicking on the handle
+                                  const row =
+                                    e.currentTarget.closest(
+                                      '[draggable="true"]'
+                                    );
+                                  if (row) {
+                                    // This will make the row the drag target
+                                    row.setAttribute("data-dragging", "true");
+                                  }
+                                }}
+                              >
+                                <GripVertical className="h-3 w-3 text-muted-foreground" />
+                              </div>
+                              <Input
+                                value={
+                                  editingValues?.tableId === table.id &&
+                                  editingValues?.columnTitle ===
+                                    subItem.title &&
+                                  editingValues?.field === "title"
+                                    ? editingValues.value
+                                    : subItem.title
+                                }
+                                onChange={(e) =>
+                                  setEditingValues({
+                                    tableId: table.id,
+                                    columnTitle: subItem.title,
+                                    field: "title",
+                                    value: e.target.value,
+                                  })
+                                }
+                                onKeyDown={(e) =>
+                                  handleKeyDown(
+                                    e,
+                                    table.id,
+                                    subItem.title,
+                                    "title",
+                                    subItem.title
+                                  )
+                                }
+                                onBlur={() => setEditingValues(null)}
+                                className="h-7 flex-1"
+                              />
+                            </div>
                             <div className="relative w-[30%]">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -605,15 +762,19 @@ export function Group() {
                                   >
                                     {getEnumTypeDisplay(
                                       editingValues?.tableId === table.id &&
-                                      editingValues?.columnTitle === subItem.title &&
-                                      editingValues?.field === "type"
+                                        editingValues?.columnTitle ===
+                                          subItem.title &&
+                                        editingValues?.field === "type"
                                         ? editingValues.value
                                         : subItem.type
                                     )}
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-[180px]">
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-[180px]"
+                                >
                                   <DropdownMenuItem
                                     onSelect={() => {
                                       updateColumnField(
@@ -893,7 +1054,11 @@ export function Group() {
                             value={value.value}
                             autoFocus
                             onChange={(e) => {
-                              updateEnumValue(enumItem.id, value.id, e.currentTarget.value);
+                              updateEnumValue(
+                                enumItem.id,
+                                value.id,
+                                e.currentTarget.value
+                              );
                             }}
                             onKeyDown={(e) =>
                               handleEditEnumValue(
@@ -959,7 +1124,9 @@ export function Group() {
           ))}
           {enums.length === 0 && (
             <div className="px-3 py-8 text-center text-muted-foreground text-sm">
-              {"No enums found. Create an enum by clicking the \"+ Enum\" button."}
+              {
+                'No enums found. Create an enum by clicking the "+ Enum" button.'
+              }
             </div>
           )}
           {enums.length > 0 && (

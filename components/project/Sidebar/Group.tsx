@@ -1,6 +1,19 @@
 "use client";
 
-import { ChevronRight, X, Pencil, Trash2, GripVertical, MoreVertical, Check, Key, Fingerprint, AlertCircle, Ban, Database } from "lucide-react";
+import {
+  ChevronRight,
+  X,
+  Pencil,
+  Trash2,
+  GripVertical,
+  MoreVertical,
+  Check,
+  Key,
+  Fingerprint,
+  AlertCircle,
+  Ban,
+  Database,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -61,7 +74,14 @@ export function Group() {
   const [editingValues, setEditingValues] = useState<{
     tableId: string;
     columnTitle: string;
-    field: "title" | "type" | "isPrimaryKey" | "isUnique" | "isNotNull" | "defaultValue" | "checkExpression";
+    field:
+      | "title"
+      | "type"
+      | "isPrimaryKey"
+      | "isUnique"
+      | "isNotNull"
+      | "defaultValue"
+      | "checkExpression";
     value: string | boolean;
   } | null>(null);
   const [editingTableId, setEditingTableId] = useState<string | null>(null);
@@ -128,14 +148,16 @@ export function Group() {
     // Create a new index with default values
     const newIndex = {
       id: `idx-${Date.now()}`,
-      name: `idx_${table.data.label.toLowerCase()}_${(table.data.indexes?.length || 0) + 1}`,
+      name: `idx_${table.data.label.toLowerCase()}_${
+        (table.data.indexes?.length || 0) + 1
+      }`,
       columns: [],
       isUnique: false,
     };
 
     // Update the table's indexes
     const currentIndexes = table.data.indexes || [];
-    
+
     setNodes((nds) =>
       nds.map((node) =>
         node.id === tableId
@@ -160,12 +182,17 @@ export function Group() {
     setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === tableId && node.data.indexes) {
-          const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+          const indexes = node.data.indexes as Array<{
+            id: string;
+            name: string;
+            columns: string[];
+            isUnique: boolean;
+          }>;
           return {
             ...node,
             data: {
               ...node.data,
-              indexes: indexes.filter(idx => idx.id !== indexId),
+              indexes: indexes.filter((idx) => idx.id !== indexId),
             },
           };
         }
@@ -192,12 +219,17 @@ export function Group() {
         setNodes((nodes) =>
           nodes.map((node) => {
             if (node.id === tableId && node.data.indexes) {
-              const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+              const indexes = node.data.indexes as Array<{
+                id: string;
+                name: string;
+                columns: string[];
+                isUnique: boolean;
+              }>;
               return {
                 ...node,
                 data: {
                   ...node.data,
-                  indexes: indexes.map(idx =>
+                  indexes: indexes.map((idx) =>
                     idx.id === indexId
                       ? { ...idx, name: e.currentTarget.value }
                       : idx
@@ -213,20 +245,29 @@ export function Group() {
     }
   };
 
-  const toggleColumnInIndex = (tableId: string, indexId: string, columnName: string) => {
+  const toggleColumnInIndex = (
+    tableId: string,
+    indexId: string,
+    columnName: string
+  ) => {
     setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === tableId && node.data.indexes) {
-          const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+          const indexes = node.data.indexes as Array<{
+            id: string;
+            name: string;
+            columns: string[];
+            isUnique: boolean;
+          }>;
           return {
             ...node,
             data: {
               ...node.data,
-              indexes: indexes.map(idx => {
+              indexes: indexes.map((idx) => {
                 if (idx.id === indexId) {
                   const columns = [...idx.columns];
                   const columnIndex = columns.indexOf(columnName);
-                  
+
                   if (columnIndex >= 0) {
                     // Remove column if already in the index
                     columns.splice(columnIndex, 1);
@@ -234,7 +275,7 @@ export function Group() {
                     // Add column if not in the index
                     columns.push(columnName);
                   }
-                  
+
                   return { ...idx, columns };
                 }
                 return idx;
@@ -251,12 +292,17 @@ export function Group() {
     setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === tableId && node.data.indexes) {
-          const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+          const indexes = node.data.indexes as Array<{
+            id: string;
+            name: string;
+            columns: string[];
+            isUnique: boolean;
+          }>;
           return {
             ...node,
             data: {
               ...node.data,
-              indexes: indexes.map(idx => {
+              indexes: indexes.map((idx) => {
                 if (idx.id === indexId) {
                   return { ...idx, isUnique: !idx.isUnique };
                 }
@@ -305,7 +351,14 @@ export function Group() {
   const updateColumnField = (
     tableId: string,
     oldTitle: string,
-    field: "title" | "type" | "isPrimaryKey" | "isUnique" | "isNotNull" | "defaultValue" | "checkExpression",
+    field:
+      | "title"
+      | "type"
+      | "isPrimaryKey"
+      | "isUnique"
+      | "isNotNull"
+      | "defaultValue"
+      | "checkExpression",
     value: string | boolean
   ) => {
     setNodes((nodes) =>
@@ -337,7 +390,14 @@ export function Group() {
     e: React.KeyboardEvent<HTMLInputElement>,
     tableId: string,
     columnTitle: string,
-    field: "title" | "type" | "isPrimaryKey" | "isUnique" | "isNotNull" | "defaultValue" | "checkExpression",
+    field:
+      | "title"
+      | "type"
+      | "isPrimaryKey"
+      | "isUnique"
+      | "isNotNull"
+      | "defaultValue"
+      | "checkExpression",
     currentValue: string | boolean
   ) => {
     if (e.key === "Enter" || e.key === "Escape") {
@@ -347,14 +407,9 @@ export function Group() {
         // Only update if the field is a string type (title, type, defaultValue)
         if (field === "title" || field === "type" || field === "defaultValue") {
           if (typeof editingValues?.value === "string") {
-        updateColumnField(
-          tableId,
-          columnTitle,
-          field,
-              editingValues.value
-        );
+            updateColumnField(tableId, columnTitle, field, editingValues.value);
           }
-        } 
+        }
         // Boolean fields are handled directly in their respective handlers
       }
       setEditingValues(null);
@@ -476,7 +531,7 @@ export function Group() {
       edge.sourceHandle ?? undefined
     );
     // const targetColumn = getColumnName(edge.target, edge.targetHandle ?? undefined);
-    
+
     // Format: sourceTable_sourceColumn_targetTable
     return `${sourceTable}_${sourceColumn}_${targetTable}`;
   };
@@ -902,34 +957,34 @@ export function Group() {
                                     </span>
                                   )}
                                 </div>
-                            <Input
-                              value={
-                                editingValues?.tableId === table.id &&
+                                <Input
+                                  value={
+                                    editingValues?.tableId === table.id &&
                                     editingValues?.columnTitle ===
                                       subItem.title &&
                                     editingValues?.field === "title" &&
                                     typeof editingValues.value === "string"
-                                  ? editingValues.value
-                                  : subItem.title
-                              }
-                              onChange={(e) =>
-                                setEditingValues({
-                                  tableId: table.id,
-                                  columnTitle: subItem.title,
-                                  field: "title",
-                                  value: e.target.value,
-                                })
-                              }
-                              onKeyDown={(e) =>
-                                handleKeyDown(
-                                  e,
-                                  table.id,
-                                  subItem.title,
-                                  "title",
-                                  subItem.title
-                                )
-                              }
-                              onBlur={() => setEditingValues(null)}
+                                      ? editingValues.value
+                                      : subItem.title
+                                  }
+                                  onChange={(e) =>
+                                    setEditingValues({
+                                      tableId: table.id,
+                                      columnTitle: subItem.title,
+                                      field: "title",
+                                      value: e.target.value,
+                                    })
+                                  }
+                                  onKeyDown={(e) =>
+                                    handleKeyDown(
+                                      e,
+                                      table.id,
+                                      subItem.title,
+                                      "title",
+                                      subItem.title
+                                    )
+                                  }
+                                  onBlur={() => setEditingValues(null)}
                                   className="h-7 flex-1"
                                 />
                               </div>
@@ -942,26 +997,24 @@ export function Group() {
                                     className="h-7 w-full justify-between font-normal text-xs"
                                   >
                                     {getEnumTypeDisplay(
-                                editingValues?.tableId === table.id &&
+                                      editingValues?.tableId === table.id &&
                                         editingValues?.columnTitle ===
                                           subItem.title &&
                                         editingValues?.field === "type" &&
                                         typeof editingValues.value === "string"
-                                  ? editingValues.value
-                                  : subItem.type
+                                        ? editingValues.value
+                                        : subItem.type
                                     )}
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                >
+                                <DropdownMenuContent align="end">
                                   <DropdownMenuItem
                                     onSelect={() => {
                                       updateColumnField(
-                                  table.id,
-                                  subItem.title,
-                                  "type",
+                                        table.id,
+                                        subItem.title,
+                                        "type",
                                         "text"
                                       );
                                     }}
@@ -1054,7 +1107,9 @@ export function Group() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <div className="px-2 py-2">
-                                    <div className="text-xs mb-1 font-medium">Default Value</div>
+                                    <div className="text-xs mb-1 font-medium">
+                                      Default Value
+                                    </div>
                                     <Input
                                       value={subItem.defaultValue || ""}
                                       placeholder="Set default value..."
@@ -1081,7 +1136,9 @@ export function Group() {
                                     />
                                   </div>
                                   <div className="px-2 py-2">
-                                    <div className="text-xs mb-1 font-medium">Check Expression</div>
+                                    <div className="text-xs mb-1 font-medium">
+                                      Check Expression
+                                    </div>
                                     <Input
                                       value={subItem.checkExpression || ""}
                                       placeholder="e.g. value > 0"
@@ -1110,7 +1167,8 @@ export function Group() {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onSelect={() => {
-                                      const isPrimaryKey = subItem.isPrimaryKey || false;
+                                      const isPrimaryKey =
+                                        subItem.isPrimaryKey || false;
                                       // When setting primary key, also set unique and not null
                                       if (!isPrimaryKey) {
                                         updateColumnField(
@@ -1150,7 +1208,9 @@ export function Group() {
                                     }}
                                   >
                                     <div className="flex items-center w-full">
-                                      {subItem.isPrimaryKey && <Check className="h-4 w-4 mr-2" />}
+                                      {subItem.isPrimaryKey && (
+                                        <Check className="h-4 w-4 mr-2" />
+                                      )}
                                       <span className="flex items-center">
                                         <Key className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                         Primary
@@ -1159,7 +1219,8 @@ export function Group() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onSelect={() => {
-                                      const isUnique = subItem.isUnique || false;
+                                      const isUnique =
+                                        subItem.isUnique || false;
                                       // If turning off unique and this is a primary key, also turn off primary key
                                       if (isUnique && subItem.isPrimaryKey) {
                                         updateColumnField(
@@ -1175,7 +1236,8 @@ export function Group() {
                                           false
                                         );
                                         toast({
-                                          title: "Unique and Primary Key Constraints Removed",
+                                          title:
+                                            "Unique and Primary Key Constraints Removed",
                                           description: `Column "${subItem.title}" is no longer unique or a primary key`,
                                         });
                                       } else {
@@ -1186,14 +1248,22 @@ export function Group() {
                                           !isUnique
                                         );
                                         toast({
-                                          title: isUnique ? "Unique Constraint Removed" : "Unique Constraint Set",
-                                          description: `Column "${subItem.title}" is ${isUnique ? "no longer" : "now"} unique`,
+                                          title: isUnique
+                                            ? "Unique Constraint Removed"
+                                            : "Unique Constraint Set",
+                                          description: `Column "${
+                                            subItem.title
+                                          }" is ${
+                                            isUnique ? "no longer" : "now"
+                                          } unique`,
                                         });
                                       }
                                     }}
                                   >
                                     <div className="flex items-center w-full">
-                                      {subItem.isUnique && <Check className="h-4 w-4 mr-2" />}
+                                      {subItem.isUnique && (
+                                        <Check className="h-4 w-4 mr-2" />
+                                      )}
                                       <span className="flex items-center">
                                         <Fingerprint className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                         Unique
@@ -1202,7 +1272,8 @@ export function Group() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onSelect={() => {
-                                      const isNotNull = subItem.isNotNull || false;
+                                      const isNotNull =
+                                        subItem.isNotNull || false;
                                       // If turning off not null and this is a primary key, also turn off primary key
                                       if (isNotNull && subItem.isPrimaryKey) {
                                         updateColumnField(
@@ -1218,7 +1289,8 @@ export function Group() {
                                           false
                                         );
                                         toast({
-                                          title: "Not Null and Primary Key Constraints Removed",
+                                          title:
+                                            "Not Null and Primary Key Constraints Removed",
                                           description: `Column "${subItem.title}" is no longer not null or a primary key`,
                                         });
                                       } else {
@@ -1229,14 +1301,22 @@ export function Group() {
                                           !isNotNull
                                         );
                                         toast({
-                                          title: isNotNull ? "Not Null Constraint Removed" : "Not Null Constraint Set",
-                                          description: `Column "${subItem.title}" is ${isNotNull ? "no longer" : "now"} not null`,
+                                          title: isNotNull
+                                            ? "Not Null Constraint Removed"
+                                            : "Not Null Constraint Set",
+                                          description: `Column "${
+                                            subItem.title
+                                          }" is ${
+                                            isNotNull ? "no longer" : "now"
+                                          } not null`,
                                         });
                                       }
                                     }}
                                   >
                                     <div className="flex items-center w-full">
-                                      {subItem.isNotNull && <Check className="h-4 w-4 mr-2" />}
+                                      {subItem.isNotNull && (
+                                        <Check className="h-4 w-4 mr-2" />
+                                      )}
                                       <span className="flex items-center">
                                         <Ban className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                         Not Null
@@ -1252,8 +1332,12 @@ export function Group() {
                                         nodes.map((node) => {
                                           if (node.id === table.id) {
                                             const updatedSchema = (
-                                              node.data.schema as DatabaseSchemaNode["data"]["schema"]
-                                            ).filter((col) => col.title !== subItem.title);
+                                              node.data
+                                                .schema as DatabaseSchemaNode["data"]["schema"]
+                                            ).filter(
+                                              (col) =>
+                                                col.title !== subItem.title
+                                            );
                                             return {
                                               ...node,
                                               data: {
@@ -1280,14 +1364,21 @@ export function Group() {
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
-                    
+
                     {/* Indexes section */}
                     {table.data.indexes && table.data.indexes.length > 0 && (
                       <>
                         <div className="px-3 pt-3 pb-1 text-xs font-semibold text-muted-foreground">
                           Indexes
                         </div>
-                        {(table.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>).map(index => (
+                        {(
+                          table.data.indexes as Array<{
+                            id: string;
+                            name: string;
+                            columns: string[];
+                            isUnique: boolean;
+                          }>
+                        ).map((index) => (
                           <SidebarMenuSubItem
                             key={index.id}
                             className="flex flex-col gap-1 hover:bg-transparent !data-[state=selected]:bg-transparent transition-colors duration-200"
@@ -1303,15 +1394,27 @@ export function Group() {
                                     onChange={(e) => {
                                       setNodes((nodes) =>
                                         nodes.map((node) => {
-                                          if (node.id === table.id && node.data.indexes) {
-                                            const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+                                          if (
+                                            node.id === table.id &&
+                                            node.data.indexes
+                                          ) {
+                                            const indexes = node.data
+                                              .indexes as Array<{
+                                              id: string;
+                                              name: string;
+                                              columns: string[];
+                                              isUnique: boolean;
+                                            }>;
                                             return {
                                               ...node,
                                               data: {
                                                 ...node.data,
-                                                indexes: indexes.map(idx =>
+                                                indexes: indexes.map((idx) =>
                                                   idx.id === index.id
-                                                    ? { ...idx, name: e.target.value }
+                                                    ? {
+                                                        ...idx,
+                                                        name: e.target.value,
+                                                      }
                                                     : idx
                                                 ),
                                               },
@@ -1322,7 +1425,12 @@ export function Group() {
                                       );
                                     }}
                                     onKeyDown={(e) =>
-                                      handleEditIndex(e, table.id, index.id, index.name)
+                                      handleEditIndex(
+                                        e,
+                                        table.id,
+                                        index.id,
+                                        index.name
+                                      )
                                     }
                                     onBlur={() => setEditingIndexId(null)}
                                     className="h-7 flex-1"
@@ -1333,25 +1441,28 @@ export function Group() {
                                       {index.name}
                                     </span>
                                     {index.isUnique && (
-                                      <span className="text-xs text-muted-foreground ml-1">(unique)</span>
+                                      <span className="text-xs text-muted-foreground ml-1">
+                                        (unique)
+                                      </span>
                                     )}
-                                    
                                   </div>
                                 )}
                               </div>
                               <div className="flex items-center">
-                              <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => setEditingIndexId(index.id)}
-                                      className="h-5 w-5 hover:opacity-50"
-                                    >
-                                      <Pencil className="h-3 w-3" />
-                                    </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleDeleteIndex(table.id, index.id)}
+                                  onClick={() => setEditingIndexId(index.id)}
+                                  className="h-5 w-5 hover:opacity-50"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleDeleteIndex(table.id, index.id)
+                                  }
                                   className="h-7 w-7 hover:text-destructive"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -1368,10 +1479,14 @@ export function Group() {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem
-                                      onSelect={() => toggleIndexUnique(table.id, index.id)}
+                                      onSelect={() =>
+                                        toggleIndexUnique(table.id, index.id)
+                                      }
                                     >
                                       <div className="flex items-center w-full">
-                                        {index.isUnique && <Check className="h-4 w-4 mr-2" />}
+                                        {index.isUnique && (
+                                          <Check className="h-4 w-4 mr-2" />
+                                        )}
                                         <span>Unique Index</span>
                                       </div>
                                     </DropdownMenuItem>
@@ -1382,10 +1497,18 @@ export function Group() {
                                     {table.data.schema.map((column) => (
                                       <DropdownMenuItem
                                         key={column.title}
-                                        onSelect={() => toggleColumnInIndex(table.id, index.id, column.title)}
+                                        onSelect={() =>
+                                          toggleColumnInIndex(
+                                            table.id,
+                                            index.id,
+                                            column.title
+                                          )
+                                        }
                                       >
                                         <div className="flex items-center w-full">
-                                          {index.columns.includes(column.title) && (
+                                          {index.columns.includes(
+                                            column.title
+                                          ) && (
                                             <Check className="h-4 w-4 mr-2" />
                                           )}
                                           <span>{column.title}</span>
@@ -1395,7 +1518,9 @@ export function Group() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                       className="text-destructive focus:text-destructive"
-                                      onSelect={() => handleDeleteIndex(table.id, index.id)}
+                                      onSelect={() =>
+                                        handleDeleteIndex(table.id, index.id)
+                                      }
                                     >
                                       Delete
                                     </DropdownMenuItem>
@@ -1412,7 +1537,7 @@ export function Group() {
                         ))}
                       </>
                     )}
-                    
+
                     <div className="flex flex-row justify-between mt-1 gap-2 mx-1">
                       <Button
                         onClick={() => handleAddIndex(table.id)}
@@ -1488,11 +1613,11 @@ export function Group() {
                       />
                     ) : (
                       <div className="flex items-center gap-1 flex-grow">
-                      <div
-                        className="font-medium cursor-pointer hover:underline"
-                        onClick={() => setEditingRelationId(edge.id)}
-                      >
-                        {edge.label || getDefaultRelationName(edge)}
+                        <div
+                          className="font-medium cursor-pointer hover:underline"
+                          onClick={() => setEditingRelationId(edge.id)}
+                        >
+                          {edge.label || getDefaultRelationName(edge)}
                         </div>
                       </div>
                     )}
@@ -1507,14 +1632,14 @@ export function Group() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                    <button
-                      onClick={() => handleDeleteRelation(edge.id)}
-                      aria-label="Delete relation"
-                      title="Delete relation"
-                      className="hover:text-destructive transition-opacity"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                      <button
+                        onClick={() => handleDeleteRelation(edge.id)}
+                        aria-label="Delete relation"
+                        title="Delete relation"
+                        className="hover:text-destructive transition-opacity"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -1672,11 +1797,11 @@ export function Group() {
             </Collapsible>
           ))}
           {enums.length === 0 && (
-        <div className="px-3 py-8 text-center text-muted-foreground text-sm">
+            <div className="px-3 py-8 text-center text-muted-foreground text-sm">
               {
                 'No enums found. Create an enum by clicking the "+ Enum" button.'
               }
-        </div>
+            </div>
           )}
           {enums.length > 0 && (
             <div className="px-3 mt-2">

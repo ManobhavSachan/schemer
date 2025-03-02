@@ -39,98 +39,118 @@ export async function PUT(
       );
     }
 
-    // Start a transaction to ensure data consistency
-    await prisma.$transaction(async (tx) => {
-      // Delete existing tables, columns, and relationships for this project
-      await tx.relationship.deleteMany({
-        where: {
-          sourceTable: {
-            projectId,
+    try {
+      // Start a transaction with a timeout to ensure data consistency
+      await prisma.$transaction(async (tx) => {
+        // Delete existing tables, columns, and relationships for this project
+        await tx.relationship.deleteMany({
+          where: {
+            sourceTable: {
+              projectId,
+            },
           },
-        },
-      });
+        });
 
-      await tx.tableColumn.deleteMany({
-        where: {
-          projectTable: {
-            projectId,
+        await tx.tableColumn.deleteMany({
+          where: {
+            projectTable: {
+              projectId,
+            },
           },
-        },
-      });
+        });
 
-      await tx.projectTable.deleteMany({
-        where: {
-          projectId,
-        },
-      });
-
-      // Create tables and columns
-      const tableIdMap = new Map(); // Map to store node.id -> database table id
-      const columnIdMap = new Map(); // Map to store node.id + column.title -> database column id
-
-      // Create tables first
-      for (const node of nodes) {
-        const table = await tx.projectTable.create({
-          data: {
-            name: node.data.label,
+        await tx.projectTable.deleteMany({
+          where: {
             projectId,
           },
         });
 
-        tableIdMap.set(node.id, table.id);
+        // Create tables and columns
+        const tableIdMap = new Map(); // Map to store node.id -> database table id
+        const columnIdMap = new Map(); // Map to store node.id + column.title -> database column id
 
-        // Create columns for this table
-        for (const column of node.data.schema) {
-          const tableColumn = await tx.tableColumn.create({
+        // Create tables first
+        for (const node of nodes) {
+          const table = await tx.projectTable.create({
             data: {
-              name: column.title,
-              dataType: column.type,
-              isNullable: !column.isNotNull,
-              defaultValue: column.defaultValue || null,
-              tableId: table.id,
+              name: node.data.label,
+              projectId,
             },
           });
 
-          columnIdMap.set(`${node.id}-${column.title}`, tableColumn.id);
-        }
-      }
+          tableIdMap.set(node.id, table.id);
 
-      // Create relationships
-      if (edges && Array.isArray(edges)) {
-        for (const edge of edges) {
-          const sourceTableId = tableIdMap.get(edge.source);
-          const targetTableId = tableIdMap.get(edge.target);
-          
-          if (!sourceTableId || !targetTableId) {
-            console.warn(`Skipping edge ${edge.id}: table not found`);
-            continue;
+          // Create columns for this table
+          for (const column of node.data.schema) {
+            const tableColumn = await tx.tableColumn.create({
+              data: {
+                name: column.title,
+                dataType: column.type,
+                isNullable: !column.isNotNull,
+                defaultValue: column.defaultValue || null,
+                tableId: table.id,
+              },
+            });
+
+            columnIdMap.set(`${node.id}-${column.title}`, tableColumn.id);
           }
-
-          const sourceColumnId = columnIdMap.get(`${edge.source}-${edge.sourceHandle}`);
-          const targetColumnId = columnIdMap.get(`${edge.target}-${edge.targetHandle}`);
-
-          if (!sourceColumnId || !targetColumnId) {
-            console.warn(`Skipping edge ${edge.id}: column not found`);
-            continue;
-          }
-
-          // Default to one-to-many relationship
-          await tx.relationship.create({
-            data: {
-              sourceTableId,
-              targetTableId,
-              sourceColumnId,
-              targetColumnId,
-              relationshipType: RelationshipType.one_to_many,
-            },
-          });
         }
+
+        // Create relationships
+        if (edges && Array.isArray(edges)) {
+          for (const edge of edges) {
+            const sourceTableId = tableIdMap.get(edge.source);
+            const targetTableId = tableIdMap.get(edge.target);
+            
+            if (!sourceTableId || !targetTableId) {
+              console.warn(`Skipping edge ${edge.id}: table not found`);
+              continue;
+            }
+
+            const sourceColumnId = columnIdMap.get(`${edge.source}-${edge.sourceHandle}`);
+            const targetColumnId = columnIdMap.get(`${edge.target}-${edge.targetHandle}`);
+
+            if (!sourceColumnId || !targetColumnId) {
+              console.warn(`Skipping edge ${edge.id}: column not found`);
+              continue;
+            }
+
+            // Default to one-to-many relationship
+            await tx.relationship.create({
+              data: {
+                sourceTableId,
+                targetTableId,
+                sourceColumnId,
+                targetColumnId,
+                relationshipType: RelationshipType.one_to_many,
+              },
+            });
+          }
+        }
+
+        // TODO: Handle enums when database schema supports them
+      }, {
+        timeout: 30000, // 30 seconds timeout
+        maxWait: 5000, // 5 seconds max wait time
+        isolationLevel: 'Serializable', // Highest isolation level for consistency
+      });
+
+      return NextResponse.json({ success: true });
+    } catch (error: any) {
+      console.error("Error in transaction:", error);
+      
+      if (error.code === 'P2028') {
+        return NextResponse.json(
+          { error: "Transaction timed out or was invalidated. Please try again." },
+          { status: 500 }
+        );
       }
-
-      // TODO: Handle enums when database schema supports them
-    });
-
-    return NextResponse.json({ success: true });
+      
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Error saving schema:", error);
     return NextResponse.json(

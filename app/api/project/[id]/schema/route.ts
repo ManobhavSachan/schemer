@@ -8,10 +8,10 @@ import { checkProjectAccess } from "@/app/api/project/helper";
 // PUT endpoint to save schema
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Properly await params following Next.js 15 guidelines
+    // Get project ID from params
     const { id: projectId } = await params;
     const { id: userId } = await getUser();
     // Check if user has access to the project
@@ -143,10 +143,9 @@ export async function PUT(
 // GET endpoint to retrieve schema
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Properly await params following Next.js 15 guidelines
     const { id: projectId } = await params;
     const { id: userId } = await getUser();
 

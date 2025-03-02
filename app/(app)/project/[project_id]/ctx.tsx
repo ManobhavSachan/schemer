@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import { useParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Define the Enum types
 export type EnumValue = {
@@ -26,6 +27,11 @@ type ProjectContextType = {
   addEnumValue: (enumId: string, value: string) => void;
   updateEnumValue: (enumId: string, valueId: string, newValue: string) => void;
   deleteEnumValue: (enumId: string, valueId: string) => void;
+  // Schema operations
+  saveSchema: (nodes: any[], edges: any[]) => Promise<void>;
+  isSavingSchema: boolean;
+  loadSchema: () => Promise<{ nodes: any[]; edges: any[] }>;
+  isLoadingSchema: boolean;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(
@@ -35,9 +41,97 @@ const ProjectContext = createContext<ProjectContextType | undefined>(
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const projectId = params.project_id as string;
+  const queryClient = useQueryClient();
   
   // Add enum state
   const [enums, setEnums] = useState<Enum[]>([]);
+
+  // Schema mutations
+  const { mutateAsync: saveSchemaAsync, isPending: isSavingSchema } = useMutation({
+    mutationFn: async ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
+      const response = await fetch(`/api/project/${projectId}/schema`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nodes,
+          edges,
+          enums,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save schema');
+      }
+      
+      return response.json();
+    },
+    onMutate: async ({ nodes, edges }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['schema', projectId] });
+      
+      // Snapshot the previous value
+      const previousSchema = queryClient.getQueryData(['schema', projectId]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(['schema', projectId], { nodes, edges });
+      
+      // Return a context object with the snapshot
+      return { previousSchema };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousSchema) {
+        queryClient.setQueryData(['schema', projectId], context.previousSchema);
+      }
+    },
+    onSuccess: () => {
+      // Don't invalidate the query as it causes a refetch loop
+      // queryClient.invalidateQueries({ queryKey: ['schema', projectId] });
+    },
+  });
+
+  // Schema query
+  const { 
+    data: schemaData,
+    isLoading: isLoadingSchema,
+    refetch: refetchSchema
+  } = useQuery({
+    queryKey: ['schema', projectId],
+    queryFn: async () => {
+      const response = await fetch(`/api/project/${projectId}/schema`);
+      
+      if (!response.ok) {
+        // If it's a 404, return empty schema
+        if (response.status === 404) {
+          return { nodes: [], edges: [] };
+        }
+        
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to load schema');
+      }
+      
+      return response.json();
+    },
+    // Don't refetch on window focus to avoid disrupting user's work
+    refetchOnWindowFocus: false,
+  });
+
+  // Wrapper function for saving schema
+  const saveSchema = async (nodes: any[], edges: any[]) => {
+    await saveSchemaAsync({ nodes, edges });
+  };
+
+  // Wrapper function for loading schema
+  const loadSchema = async () => {
+    const result = await refetchSchema();
+    if (result.error) {
+      throw result.error;
+    }
+    return result.data || { nodes: [], edges: [] };
+  };
 
   // Add a new enum
   const addEnum = (name: string) => {
@@ -127,7 +221,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         deleteEnum,
         addEnumValue,
         updateEnumValue,
-        deleteEnumValue
+        deleteEnumValue,
+        // Add schema operations
+        saveSchema,
+        isSavingSchema,
+        loadSchema,
+        isLoadingSchema
       }}
     >
       {children}

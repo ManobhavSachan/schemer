@@ -47,6 +47,54 @@ import { ChevronDown } from "lucide-react";
 import { useProject } from "@/app/(app)/project/[project_id]/ctx";
 import { MoreHorizontal } from "lucide-react";
 
+// Add a constant array of database data types
+const DATABASE_DATA_TYPES = [
+  // String types
+  { value: "string", label: "string" },
+  { value: "text", label: "text" },
+  { value: "varchar", label: "varchar" },
+  { value: "char", label: "char" },
+  
+  // Number types
+  { value: "int", label: "int" },
+  { value: "integer", label: "integer" },
+  { value: "float", label: "float" },
+  { value: "decimal", label: "decimal" },
+  { value: "bigint", label: "bigint" },
+  { value: "smallint", label: "smallint" },
+  { value: "double", label: "double" },
+  { value: "real", label: "real" },
+  
+  // Boolean type
+  { value: "boolean", label: "boolean" },
+  
+  // Date and time types
+  { value: "datetime", label: "datetime" },
+  { value: "date", label: "date" },
+  { value: "time", label: "time" },
+  { value: "timestamp", label: "timestamp" },
+  
+  // JSON types
+  { value: "json", label: "json" },
+  { value: "jsonb", label: "jsonb" },
+  
+  // Binary types
+  { value: "bytes", label: "bytes" },
+  { value: "bytea", label: "bytea" },
+  
+  // UUID type
+  { value: "uuid", label: "uuid" },
+  
+  // Other types
+  { value: "money", label: "money" },
+  { value: "serial", label: "serial" },
+  { value: "bigserial", label: "bigserial" },
+  { value: "xml", label: "xml" },
+  { value: "inet", label: "inet" },
+  { value: "cidr", label: "cidr" },
+  { value: "macaddr", label: "macaddr" },
+];
+
 export function Group() {
   const { toast } = useToast();
   const nodes = useNodes() as DatabaseSchemaNode[];
@@ -93,6 +141,8 @@ export function Group() {
   const [editingRelationId, setEditingRelationId] = useState<string | null>(
     null
   );
+  // Add state for type search
+  const [typeSearchQuery, setTypeSearchQuery] = useState("");
 
   // Local state for UI interactions with enums
   const [editingEnumId, setEditingEnumId] = useState<string | null>(null);
@@ -138,6 +188,11 @@ export function Group() {
   // Filter enums based on search query
   const filteredEnums = enums.filter((enumItem) =>
     enumItem.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filter data types based on search query
+  const filteredDataTypes = DATABASE_DATA_TYPES.filter(dataType => 
+    dataType.label.toLowerCase().includes(typeSearchQuery.toLowerCase())
   );
 
   const handleAddIndex = (tableId: string) => {
@@ -1008,87 +1063,77 @@ export function Group() {
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onSelect={() => {
-                                      updateColumnField(
-                                        table.id,
-                                        subItem.title,
-                                        "type",
-                                        "text"
-                                      );
-                                    }}
-                                  >
-                                    text
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onSelect={() => {
-                                      updateColumnField(
-                                        table.id,
-                                        subItem.title,
-                                        "type",
-                                        "integer"
-                                      );
-                                    }}
-                                  >
-                                    integer
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onSelect={() => {
-                                      updateColumnField(
-                                        table.id,
-                                        subItem.title,
-                                        "type",
-                                        "boolean"
-                                      );
-                                    }}
-                                  >
-                                    boolean
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onSelect={() => {
-                                      updateColumnField(
-                                        table.id,
-                                        subItem.title,
-                                        "type",
-                                        "date"
-                                      );
-                                    }}
-                                  >
-                                    date
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onSelect={() => {
-                                      updateColumnField(
-                                        table.id,
-                                        subItem.title,
-                                        "type",
-                                        "uuid"
-                                      );
-                                    }}
-                                  >
-                                    uuid
-                                  </DropdownMenuItem>
+                                <DropdownMenuContent align="end" className="w-[200px]">
+                                  <div className="px-2 py-2 sticky top-0 bg-background z-10 border-b">
+                                    <Input
+                                      placeholder="Search types..."
+                                      value={typeSearchQuery}
+                                      onChange={(e) => {
+                                        const input = e.target as HTMLInputElement;
+                                        setTypeSearchQuery(input.value);
+                                      }}
+                                      className="h-7"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  <div className="max-h-[300px] overflow-y-auto">
+                                    {filteredDataTypes.map((dataType) => (
+                                      <DropdownMenuItem
+                                        key={dataType.value}
+                                        onSelect={() => {
+                                          updateColumnField(
+                                            table.id,
+                                            subItem.title,
+                                            "type",
+                                            dataType.value
+                                          );
+                                          setTypeSearchQuery(""); // Reset search after selection
+                                        }}
+                                      >
+                                        {dataType.label}
+                                      </DropdownMenuItem>
+                                    ))}
+                                    {filteredDataTypes.length === 0 && (
+                                      <div className="px-2 py-2 text-sm text-muted-foreground text-center">
+                                        No types found
+                                      </div>
+                                    )}
+                                  </div>
                                   {enums.length > 0 && (
                                     <>
+                                      <DropdownMenuSeparator />
                                       <div className="px-2 py-1.5 text-xs font-semibold">
                                         Enums
                                       </div>
-                                      {enums.map((enumItem) => (
-                                        <DropdownMenuItem
-                                          key={enumItem.id}
-                                          onSelect={() => {
-                                            updateColumnField(
-                                              table.id,
-                                              subItem.title,
-                                              "type",
-                                              `enum:${enumItem.id}`
-                                            );
-                                          }}
-                                        >
-                                          {enumItem.name}
-                                        </DropdownMenuItem>
-                                      ))}
+                                      <div className="max-h-[150px] overflow-y-auto">
+                                        {enums
+                                          .filter(enumItem => 
+                                            enumItem.name.toLowerCase().includes(typeSearchQuery.toLowerCase())
+                                          )
+                                          .map((enumItem) => (
+                                            <DropdownMenuItem
+                                              key={enumItem.id}
+                                              onSelect={() => {
+                                                updateColumnField(
+                                                  table.id,
+                                                  subItem.title,
+                                                  "type",
+                                                  `enum:${enumItem.id}`
+                                                );
+                                                setTypeSearchQuery(""); // Reset search after selection
+                                              }}
+                                            >
+                                              {enumItem.name}
+                                            </DropdownMenuItem>
+                                          ))}
+                                        {enums.filter(enumItem => 
+                                          enumItem.name.toLowerCase().includes(typeSearchQuery.toLowerCase())
+                                        ).length === 0 && typeSearchQuery && (
+                                          <div className="px-2 py-2 text-sm text-muted-foreground text-center">
+                                            No enums found
+                                          </div>
+                                        )}
+                                      </div>
                                     </>
                                   )}
                                 </DropdownMenuContent>

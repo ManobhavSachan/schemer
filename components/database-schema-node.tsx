@@ -17,6 +17,12 @@ export type DatabaseSchemaNode = Node<{
     defaultValue?: string;
     checkExpression?: string;
   }[];
+  indexes?: { 
+    id: string;
+    name: string;
+    columns: string[];
+    isUnique: boolean;
+  }[];
 }>;
 
 export function DatabaseSchemaNode({

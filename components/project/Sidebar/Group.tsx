@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, X, Pencil, Trash2, GripVertical, MoreVertical, Check, Key, Fingerprint, AlertCircle, Ban } from "lucide-react";
+import { ChevronRight, X, Pencil, Trash2, GripVertical, MoreVertical, Check, Key, Fingerprint, AlertCircle, Ban, Database } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -88,6 +88,9 @@ export function Group() {
     columnTitle: string;
   } | null>(null);
 
+  // Add state for editing index
+  const [editingIndexId, setEditingIndexId] = useState<string | null>(null);
+
   // Update open states and scroll to selected table
   useEffect(() => {
     const newOpenStates = { ...openStates };
@@ -118,8 +121,153 @@ export function Group() {
   );
 
   const handleAddIndex = (tableId: string) => {
-    console.log("add index", tableId);
-    handleComingSoonTab();
+    // Find the table in the nodes array
+    const table = nodes.find((n) => n.id === tableId);
+    if (!table) return;
+
+    // Create a new index with default values
+    const newIndex = {
+      id: `idx-${Date.now()}`,
+      name: `idx_${table.data.label.toLowerCase()}_${(table.data.indexes?.length || 0) + 1}`,
+      columns: [],
+      isUnique: false,
+    };
+
+    // Update the table's indexes
+    const currentIndexes = table.data.indexes || [];
+    
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === tableId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                indexes: [...currentIndexes, newIndex],
+              },
+            }
+          : node
+      )
+    );
+
+    toast({
+      title: "Index created",
+      description: `New index "${newIndex.name}" has been created`,
+    });
+  };
+
+  const handleDeleteIndex = (tableId: string, indexId: string) => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === tableId && node.data.indexes) {
+          const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              indexes: indexes.filter(idx => idx.id !== indexId),
+            },
+          };
+        }
+        return node;
+      })
+    );
+
+    toast({
+      title: "Index deleted",
+      description: "The index has been removed",
+    });
+  };
+
+  const handleEditIndex = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    tableId: string,
+    indexId: string,
+    currentValue: string
+  ) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault();
+      e.currentTarget.blur();
+      if (e.key === "Enter" && e.currentTarget.value !== currentValue) {
+        setNodes((nodes) =>
+          nodes.map((node) => {
+            if (node.id === tableId && node.data.indexes) {
+              const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  indexes: indexes.map(idx =>
+                    idx.id === indexId
+                      ? { ...idx, name: e.currentTarget.value }
+                      : idx
+                  ),
+                },
+              };
+            }
+            return node;
+          })
+        );
+      }
+      setEditingIndexId(null);
+    }
+  };
+
+  const toggleColumnInIndex = (tableId: string, indexId: string, columnName: string) => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === tableId && node.data.indexes) {
+          const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              indexes: indexes.map(idx => {
+                if (idx.id === indexId) {
+                  const columns = [...idx.columns];
+                  const columnIndex = columns.indexOf(columnName);
+                  
+                  if (columnIndex >= 0) {
+                    // Remove column if already in the index
+                    columns.splice(columnIndex, 1);
+                  } else {
+                    // Add column if not in the index
+                    columns.push(columnName);
+                  }
+                  
+                  return { ...idx, columns };
+                }
+                return idx;
+              }),
+            },
+          };
+        }
+        return node;
+      })
+    );
+  };
+
+  const toggleIndexUnique = (tableId: string, indexId: string) => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === tableId && node.data.indexes) {
+          const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              indexes: indexes.map(idx => {
+                if (idx.id === indexId) {
+                  return { ...idx, isUnique: !idx.isUnique };
+                }
+                return idx;
+              }),
+            },
+          };
+        }
+        return node;
+      })
+    );
   };
 
   const handleAddColumn = (tableId: string) => {
@@ -199,12 +347,12 @@ export function Group() {
         // Only update if the field is a string type (title, type, defaultValue)
         if (field === "title" || field === "type" || field === "defaultValue") {
           if (typeof editingValues?.value === "string") {
-            updateColumnField(
-              tableId,
-              columnTitle,
-              field,
+        updateColumnField(
+          tableId,
+          columnTitle,
+          field,
               editingValues.value
-            );
+        );
           }
         } 
         // Boolean fields are handled directly in their respective handlers
@@ -328,7 +476,7 @@ export function Group() {
       edge.sourceHandle ?? undefined
     );
     // const targetColumn = getColumnName(edge.target, edge.targetHandle ?? undefined);
-
+    
     // Format: sourceTable_sourceColumn_targetTable
     return `${sourceTable}_${sourceColumn}_${targetTable}`;
   };
@@ -754,34 +902,34 @@ export function Group() {
                                     </span>
                                   )}
                                 </div>
-                                <Input
-                                  value={
-                                    editingValues?.tableId === table.id &&
+                            <Input
+                              value={
+                                editingValues?.tableId === table.id &&
                                     editingValues?.columnTitle ===
                                       subItem.title &&
                                     editingValues?.field === "title" &&
                                     typeof editingValues.value === "string"
-                                      ? editingValues.value
-                                      : subItem.title
-                                  }
-                                  onChange={(e) =>
-                                    setEditingValues({
-                                      tableId: table.id,
-                                      columnTitle: subItem.title,
-                                      field: "title",
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  onKeyDown={(e) =>
-                                    handleKeyDown(
-                                      e,
-                                      table.id,
-                                      subItem.title,
-                                      "title",
-                                      subItem.title
-                                    )
-                                  }
-                                  onBlur={() => setEditingValues(null)}
+                                  ? editingValues.value
+                                  : subItem.title
+                              }
+                              onChange={(e) =>
+                                setEditingValues({
+                                  tableId: table.id,
+                                  columnTitle: subItem.title,
+                                  field: "title",
+                                  value: e.target.value,
+                                })
+                              }
+                              onKeyDown={(e) =>
+                                handleKeyDown(
+                                  e,
+                                  table.id,
+                                  subItem.title,
+                                  "title",
+                                  subItem.title
+                                )
+                              }
+                              onBlur={() => setEditingValues(null)}
                                   className="h-7 flex-1"
                                 />
                               </div>
@@ -794,27 +942,26 @@ export function Group() {
                                     className="h-7 w-full justify-between font-normal text-xs"
                                   >
                                     {getEnumTypeDisplay(
-                                      editingValues?.tableId === table.id &&
+                                editingValues?.tableId === table.id &&
                                         editingValues?.columnTitle ===
                                           subItem.title &&
                                         editingValues?.field === "type" &&
                                         typeof editingValues.value === "string"
-                                          ? editingValues.value
-                                          : subItem.type
+                                  ? editingValues.value
+                                  : subItem.type
                                     )}
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
                                   align="end"
-                                  className="w-[180px]"
                                 >
                                   <DropdownMenuItem
                                     onSelect={() => {
                                       updateColumnField(
-                                        table.id,
-                                        subItem.title,
-                                        "type",
+                                  table.id,
+                                  subItem.title,
+                                  "type",
                                         "text"
                                       );
                                     }}
@@ -1133,7 +1280,140 @@ export function Group() {
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
-                    <div className="flex flex-row justify-between mt-1 gap-2">
+                    
+                    {/* Indexes section */}
+                    {table.data.indexes && table.data.indexes.length > 0 && (
+                      <>
+                        <div className="px-3 pt-3 pb-1 text-xs font-semibold text-muted-foreground">
+                          Indexes
+                        </div>
+                        {(table.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>).map(index => (
+                          <SidebarMenuSubItem
+                            key={index.id}
+                            className="flex flex-col gap-1 hover:bg-transparent !data-[state=selected]:bg-transparent transition-colors duration-200"
+                          >
+                            <div className="flex flex-row justify-between h-8 gap-1 px-3 py-1">
+                              <div className="flex items-center gap-1 flex-1">
+                                <Database className="h-3 w-3 text-muted-foreground mr-1" />
+                                {editingIndexId === index.id ? (
+                                  <Input
+                                    value={index.name}
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => {
+                                      setNodes((nodes) =>
+                                        nodes.map((node) => {
+                                          if (node.id === table.id && node.data.indexes) {
+                                            const indexes = node.data.indexes as Array<{ id: string; name: string; columns: string[]; isUnique: boolean }>;
+                                            return {
+                                              ...node,
+                                              data: {
+                                                ...node.data,
+                                                indexes: indexes.map(idx =>
+                                                  idx.id === index.id
+                                                    ? { ...idx, name: e.target.value }
+                                                    : idx
+                                                ),
+                                              },
+                                            };
+                                          }
+                                          return node;
+                                        })
+                                      );
+                                    }}
+                                    onKeyDown={(e) =>
+                                      handleEditIndex(e, table.id, index.id, index.name)
+                                    }
+                                    onBlur={() => setEditingIndexId(null)}
+                                    className="h-7 flex-1"
+                                  />
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <span className="cursor-default">
+                                      {index.name}
+                                    </span>
+                                    {index.isUnique && (
+                                      <span className="text-xs text-muted-foreground ml-1">(unique)</span>
+                                    )}
+                                    
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center">
+                              <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setEditingIndexId(index.id)}
+                                      className="h-5 w-5 hover:opacity-50"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteIndex(table.id, index.id)}
+                                  className="h-7 w-7 hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 hover:bg-muted"
+                                    >
+                                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onSelect={() => toggleIndexUnique(table.id, index.id)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        {index.isUnique && <Check className="h-4 w-4 mr-2" />}
+                                        <span>Unique Index</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <div className="px-2 py-1.5 text-xs font-semibold">
+                                      Columns
+                                    </div>
+                                    {table.data.schema.map((column) => (
+                                      <DropdownMenuItem
+                                        key={column.title}
+                                        onSelect={() => toggleColumnInIndex(table.id, index.id, column.title)}
+                                      >
+                                        <div className="flex items-center w-full">
+                                          {index.columns.includes(column.title) && (
+                                            <Check className="h-4 w-4 mr-2" />
+                                          )}
+                                          <span>{column.title}</span>
+                                        </div>
+                                      </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onSelect={() => handleDeleteIndex(table.id, index.id)}
+                                    >
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            {index.columns.length > 0 && (
+                              <div className="px-7 pb-1 text-xs text-muted-foreground">
+                                {index.columns.join(", ")}
+                              </div>
+                            )}
+                          </SidebarMenuSubItem>
+                        ))}
+                      </>
+                    )}
+                    
+                    <div className="flex flex-row justify-between mt-1 gap-2 mx-1">
                       <Button
                         onClick={() => handleAddIndex(table.id)}
                         className="w-full"
@@ -1208,11 +1488,11 @@ export function Group() {
                       />
                     ) : (
                       <div className="flex items-center gap-1 flex-grow">
-                        <div
-                          className="font-medium cursor-pointer hover:underline"
-                          onClick={() => setEditingRelationId(edge.id)}
-                        >
-                          {edge.label || getDefaultRelationName(edge)}
+                      <div
+                        className="font-medium cursor-pointer hover:underline"
+                        onClick={() => setEditingRelationId(edge.id)}
+                      >
+                        {edge.label || getDefaultRelationName(edge)}
                         </div>
                       </div>
                     )}
@@ -1227,14 +1507,14 @@ export function Group() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <button
-                        onClick={() => handleDeleteRelation(edge.id)}
-                        aria-label="Delete relation"
-                        title="Delete relation"
-                        className="hover:text-destructive transition-opacity"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <button
+                      onClick={() => handleDeleteRelation(edge.id)}
+                      aria-label="Delete relation"
+                      title="Delete relation"
+                      className="hover:text-destructive transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -1392,11 +1672,11 @@ export function Group() {
             </Collapsible>
           ))}
           {enums.length === 0 && (
-            <div className="px-3 py-8 text-center text-muted-foreground text-sm">
+        <div className="px-3 py-8 text-center text-muted-foreground text-sm">
               {
                 'No enums found. Create an enum by clicking the "+ Enum" button.'
               }
-            </div>
+        </div>
           )}
           {enums.length > 0 && (
             <div className="px-3 mt-2">

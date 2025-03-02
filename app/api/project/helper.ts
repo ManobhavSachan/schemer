@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prismaClient";
 import { Prisma } from "@prisma/client";
 
 const isValidUrl = (url: string) => {
@@ -56,4 +57,28 @@ export function getProjectFilters(search: string, userId: string) {
       },
     ],
   };
+}
+
+/**
+ * Helper function to check if user has access to the project
+ * @param projectId The ID of the project to check access for
+ * @param userId The ID of the user requesting access
+ * @returns The collaborator object if access is granted
+ * @throws Error if user does not have access to the project
+ */
+export async function checkProjectAccess(projectId: string, userId: string) {
+  const collaborator = await prisma.collaborator.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId,
+      },
+    },
+  });
+
+  if (!collaborator) {
+    throw new Error("Unauthorized access to project");
+  }
+
+  return collaborator;
 }

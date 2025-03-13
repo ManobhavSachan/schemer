@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <SidebarProvider>
           <AppSidebar />
           <div className="flex-1">
-            <SidebarTrigger className="absolute z-10 m-2" data-sidebar-id="app-sidebar" />
+            <SidebarTrigger className="absolute z-10 m-3.5" data-sidebar-id="app-sidebar" />
             <Suspense fallback={<LoadingProgress />}>
               {children}
             </Suspense>

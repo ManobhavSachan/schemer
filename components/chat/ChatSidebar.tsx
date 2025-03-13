@@ -144,11 +144,12 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
 
       {/* Chat Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 right-0 z-20 w-[500px] transform transition-transform duration-300 ease-in-out",
+        "fixed inset-y-0 right-0 z-20 transform transition-transform duration-300 ease-in-out",
+        "w-full sm:w-[500px]", // Full width on mobile, 500px on sm and up
         isOpen ? "translate-x-0" : "translate-x-full",
         className
       )}>
-        <div className="flex h-full flex-col rounded-l-lg border-l border-sidebar-border bg-sidebar shadow-xl">
+        <div className="flex h-full flex-col border-l border-sidebar-border bg-sidebar shadow-xl sm:rounded-l-lg">
           <div className="flex flex-row items-center justify-between p-4">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />

@@ -12,6 +12,7 @@ import remarkGfm from "remark-gfm";
 
 interface ChatInterfaceProps {
   className?: string;
+  initialMessages?: Message[];
 }
 
 function LoadingDots() {
@@ -26,8 +27,10 @@ function LoadingDots() {
   );
 }
 
-export function ChatInterface({ className }: ChatInterfaceProps) {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+export function ChatInterface({ className, initialMessages = [] }: ChatInterfaceProps) {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    initialMessages
+  });
   const [error, setError] = useState<Error | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -37,6 +40,15 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Emit message updates for storage
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("chat-update", {
+        detail: { messages }
+      })
+    );
   }, [messages]);
 
   // Handle image upload

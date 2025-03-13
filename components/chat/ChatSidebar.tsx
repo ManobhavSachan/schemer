@@ -12,15 +12,53 @@ import {
 } from "@/components/ui/sidebar";
 import { MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
+import { Message } from "@ai-sdk/react";
 
 interface ChatSidebarProps {
   className?: string;
 }
 
+// Helper function to get stored messages
+const getStoredMessages = (projectId: string): Message[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(`chat-messages-${projectId}`);
+  return stored ? JSON.parse(stored) : [];
+};
+
+// Helper function to store messages
+const storeMessages = (projectId: string, messages: Message[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(`chat-messages-${projectId}`, JSON.stringify(messages));
+};
+
 export function ChatSidebar({ className }: ChatSidebarProps) {
+  const params = useParams();
+  const projectId = params.project_id as string;
   const [isOpen, setIsOpen] = useState(false);
   const [pendingToolCall, setPendingToolCall] = useState<any>(null);
   const [isToolCallDialogOpen, setIsToolCallDialogOpen] = useState(false);
+  const [storedMessages, setStoredMessages] = useState<Message[]>([]);
+
+  // Initialize stored messages
+  useEffect(() => {
+    const messages = getStoredMessages(projectId);
+    setStoredMessages(messages);
+  }, [projectId]);
+
+  // Listen for message updates
+  useEffect(() => {
+    const handleMessageUpdate = (event: CustomEvent<{ messages: Message[] }>) => {
+      const messages = event.detail.messages;
+      setStoredMessages(messages);
+      storeMessages(projectId, messages);
+    };
+
+    window.addEventListener("chat-update" as any, handleMessageUpdate);
+    return () => {
+      window.removeEventListener("chat-update" as any, handleMessageUpdate);
+    };
+  }, [projectId]);
 
   // Handle keyboard shortcut
   useEffect(() => {
@@ -133,7 +171,7 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
           </div>
           
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-4">
-            <ChatInterface />
+            <ChatInterface initialMessages={storedMessages} />
           </div>
         </div>
       </div>

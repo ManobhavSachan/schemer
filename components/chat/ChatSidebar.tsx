@@ -22,6 +22,19 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   const [pendingToolCall, setPendingToolCall] = useState<any>(null);
   const [isToolCallDialogOpen, setIsToolCallDialogOpen] = useState(false);
 
+  // Handle keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'l') {
+        e.preventDefault(); // Prevent browser's default action
+        setIsOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Listen for toggle-chat events from the Canvas component
   useEffect(() => {
     const handleToggleChat = () => {
@@ -103,14 +116,20 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
               <MessageSquare className="h-5 w-5" />
               <h2 className="text-lg font-semibold">Design</h2>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setIsOpen(false)}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">{navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl'}</span>
+                <span className="text-xs">L</span>
+              </kbd>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-4">

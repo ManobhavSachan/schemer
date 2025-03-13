@@ -9,6 +9,14 @@ export default {
   ],
   theme: {
   	extend: {
+      keyframes: {
+        loading: {
+          "0%": { opacity: "0" },
+          "20%": { opacity: "1" },
+          "80%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        }
+      },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

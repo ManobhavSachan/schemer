@@ -20,12 +20,13 @@ import { useTheme } from "next-themes";
 import { toPng } from "html-to-image";
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
-import { ArrowDownToLine, LayoutGrid, Maximize2, Save } from "lucide-react";
+import { ArrowDownToLine, LayoutGrid, Maximize2, MessageSquare, Save } from "lucide-react";
 import DatabaseSchemaEdge from "./Edge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/app/(app)/project/[project_id]/ctx";
 import { Loader2 } from "lucide-react";
+
 
 // ReactFlow is scaling everything by the factor of 2
 const TABLE_NODE_WIDTH = 320;
@@ -562,6 +563,14 @@ export default function App() {
           title="Download as PNG"
         >
           <ArrowDownToLine className="h-4 w-4" />
+        </Button>
+        <Button
+          className="h-5 px-2"
+          variant="ghost"
+          onClick={() => window.dispatchEvent(new CustomEvent("toggle-chat"))}
+          title="Open Chat Assistant"
+        >
+          <MessageSquare className="h-4 w-4" />
         </Button>
       </Controls>
       

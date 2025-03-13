@@ -4,12 +4,6 @@ import { useEffect, useState } from "react";
 import { ChatInterface } from "./ChatInterface";
 import { ToolCallApproval } from "./ToolCallApproval";
 import { cn } from "@/lib/utils";
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader,
-  SidebarFooter
-} from "@/components/ui/sidebar";
 import { MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
@@ -17,6 +11,11 @@ import { Message } from "@ai-sdk/react";
 
 interface ChatSidebarProps {
   className?: string;
+}
+
+interface ToolCall {
+  name: string;
+  args: Record<string, unknown>;
 }
 
 // Helper function to get stored messages
@@ -36,7 +35,7 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
   const params = useParams();
   const projectId = params.project_id as string;
   const [isOpen, setIsOpen] = useState(false);
-  const [pendingToolCall, setPendingToolCall] = useState<any>(null);
+  const [pendingToolCall, setPendingToolCall] = useState<ToolCall | null>(null);
   const [isToolCallDialogOpen, setIsToolCallDialogOpen] = useState(false);
   const [storedMessages, setStoredMessages] = useState<Message[]>([]);
 
@@ -54,9 +53,9 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
       storeMessages(projectId, messages);
     };
 
-    window.addEventListener("chat-update" as any, handleMessageUpdate);
+    window.addEventListener("chat-update", handleMessageUpdate as EventListener);
     return () => {
-      window.removeEventListener("chat-update" as any, handleMessageUpdate);
+      window.removeEventListener("chat-update", handleMessageUpdate as EventListener);
     };
   }, [projectId]);
 
@@ -122,26 +121,20 @@ export function ChatSidebar({ className }: ChatSidebarProps) {
 
   // Listen for tool call events from the chat interface
   useEffect(() => {
-    const handleToolCall = (event: CustomEvent) => {
+    const handleToolCall = (event: CustomEvent<ToolCall>) => {
       const toolCall = event.detail;
       setPendingToolCall(toolCall);
       setIsToolCallDialogOpen(true);
     };
 
-    window.addEventListener("tool-call" as any, handleToolCall);
+    window.addEventListener("tool-call", handleToolCall as EventListener);
     return () => {
-      window.removeEventListener("tool-call" as any, handleToolCall);
+      window.removeEventListener("tool-call", handleToolCall as EventListener);
     };
   }, []);
 
-  // Create a chat sidebar trigger button
-  const toggleChat = () => {
-    setIsOpen((prev) => !prev);
-  };
-
   return (
     <>
-
       {/* Chat Sidebar */}
       <div className={cn(
         "fixed inset-y-0 right-0 z-20 transform transition-transform duration-300 ease-in-out",

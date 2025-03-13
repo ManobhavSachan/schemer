@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { useChat, Message } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import type { Components } from "react-markdown";
+import Image from "next/image";
 interface ChatInterfaceProps {
   className?: string;
   initialMessages?: Message[];
@@ -25,13 +26,11 @@ function LoadingDots() {
       </span>
     </div>
   );
-}
-
-export function ChatInterface({ className, initialMessages = [] }: ChatInterfaceProps) {
+}export function ChatInterface({ className, initialMessages = [] }: ChatInterfaceProps) {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     initialMessages
   });
-  const [error, setError] = useState<Error | null>(null);
+  const [error] = useState<Error | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -128,27 +127,28 @@ export function ChatInterface({ className, initialMessages = [] }: ChatInterface
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
                       components={{
-                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                        a: ({ node, ...props }) => <a className="text-blue-500 hover:underline" {...props} />,
-                        ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-2" {...props} />,
-                        ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-2" {...props} />,
-                        li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-                        h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-2" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-2" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-md font-bold mb-2" {...props} />,
-                        code: ({ node, inline, className, ...props }: any) => {
-                          return inline 
-                            ? <code className="bg-secondary/50 px-1 py-0.5 rounded text-xs" {...props} />
-                            : <code className="block bg-secondary/50 p-2 rounded text-xs overflow-x-auto my-2" {...props} />
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        a: ({ children, href }) => <a href={href} className="text-blue-500 hover:underline">{children}</a>,
+                        ul: ({ children }) => <ul className="list-disc pl-6 mb-2">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-6 mb-2">{children}</ol>,
+                        li: ({ children }) => <li className="mb-1">{children}</li>,
+                        h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-md font-bold mb-2">{children}</h3>,
+                        code: ({ children, className }) => {
+                          const isInline = !className;
+                          return isInline 
+                            ? <code className="bg-secondary/50 px-1 py-0.5 rounded text-xs">{children}</code>
+                            : <code className="block bg-secondary/50 p-2 rounded text-xs overflow-x-auto my-2">{children}</code>;
                         },
-                        pre: ({ node, ...props }) => <pre className="bg-secondary/50 p-2 rounded overflow-x-auto my-2" {...props} />,
-                        blockquote: ({ node, ...props }) => <blockquote className="border-l-2 border-muted-foreground pl-4 italic my-2" {...props} />,
-                        hr: ({ node, ...props }) => <hr className="my-4 border-muted" {...props} />,
-                        img: ({ node, ...props }) => <img className="max-w-full h-auto rounded my-2" {...props} />,
-                        table: ({ node, ...props }) => <table className="border-collapse w-full my-2" {...props} />,
-                        th: ({ node, ...props }) => <th className="border border-border p-2 text-left" {...props} />,
-                        td: ({ node, ...props }) => <td className="border border-border p-2" {...props} />,
-                      }}
+                        pre: ({ children }) => <pre className="bg-secondary/50 p-2 rounded overflow-x-auto my-2">{children}</pre>,
+                        blockquote: ({ children }) => <blockquote className="border-l-2 border-muted-foreground pl-4 italic my-2">{children}</blockquote>,
+                        hr: () => <hr className="my-4 border-muted" />,
+                        img: ({ src, alt = "" }) => <Image src={src ?? ""} alt={alt} className="max-w-full h-auto rounded my-2" />,
+                        table: ({ children }) => <table className="border-collapse w-full my-2">{children}</table>,
+                        th: ({ children }) => <th className="border border-border p-2 text-left">{children}</th>,
+                        td: ({ children }) => <td className="border border-border p-2">{children}</td>,
+                      } as Components}
                     >
                       {message.content}
                     </ReactMarkdown>
@@ -159,7 +159,7 @@ export function ChatInterface({ className, initialMessages = [] }: ChatInterface
                     attachment?.contentType?.startsWith('image/')
                   ).map((attachment, index) => (
                     <div key={`${message.id}-${index}`} className="mt-2">
-                      <img 
+                      <Image
                         src={attachment.url} 
                         alt={attachment.name ?? `image-${index}`}
                         className="max-h-60 rounded-md object-contain"
@@ -186,7 +186,7 @@ export function ChatInterface({ className, initialMessages = [] }: ChatInterface
       {imagePreview && (
         <div className="relative mx-4 mb-2">
           <div className="relative rounded-md border border-border overflow-hidden">
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
               className="max-h-40 w-full object-contain"
@@ -234,7 +234,7 @@ export function ChatInterface({ className, initialMessages = [] }: ChatInterface
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  handleFormSubmit(e as any);
+                  handleFormSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
                 }
               }}
             />

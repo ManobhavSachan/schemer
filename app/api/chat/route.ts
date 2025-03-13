@@ -1,4 +1,4 @@
-import { generateText, streamText, tool } from 'ai';
+import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { provider } from './provider';
 export const maxDuration = 30;

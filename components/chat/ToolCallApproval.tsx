@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,11 +13,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, X } from "lucide-react";
 
+interface ToolCall {
+  name: string;
+  args: Record<string, unknown>;
+}
+
 interface ToolCallApprovalProps {
-  toolCall: {
-    name: string;
-    args: Record<string, any>;
-  };
+  toolCall: ToolCall;
   isOpen: boolean;
   onApprove: () => void;
   onReject: () => void;
@@ -29,12 +32,12 @@ export function ToolCallApproval({
   onReject,
 }: ToolCallApprovalProps) {
   // Format the tool call arguments for display
-  const formatArgs = (args: Record<string, any>) => {
+  const formatArgs = (args: Record<string, unknown>) => {
     return JSON.stringify(args, null, 2);
   };
 
   // Get a human-readable description of the tool call
-  const getToolDescription = (name: string, args: Record<string, any>) => {
+  const getToolDescription = (name: string, args: Record<string, unknown>) => {
     switch (name) {
       case "create_node":
         return `Create a new table named "${args.label}"`;

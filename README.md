@@ -1,15 +1,21 @@
 # Schemer - Visual Database Schema Designer
 
-[![Schemer Demo Video](https://img.youtube.com/vi/rt8h5SGPhx8/0.jpg)](https://www.youtube.com/watch?v=rt8h5SGPhx8)
-*Click the image above to watch the demo video*
-
-![Project Screenshot](path/to/your/screenshot.png)
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=rt8h5SGPhx8">
+    <img src="https://img.youtube.com/vi/rt8h5SGPhx8/0.jpg" alt="Schemer Demo Video" width="600" />
+  </a>
+  <p><em>⬆️ Click to watch the demo video on YouTube ⬆️</em></p>
+</div>
 
 ## 🌟 Overview
 
 Schemer is a powerful, interactive database schema design tool that helps developers and database architects visualize and create database schemas with ease. Built with Next.js and React Flow, it provides a modern, intuitive interface for designing database structures, relationships, and constraints while leveraging LLM capabilities to enhance productivity.
 
 [View Schemer on DevPost](https://devpost.com/software/schemer-the-final-db)
+
+## 💻 System Design
+
+![Schemer System Design - Page 1](https://github.com/user-attachments/assets/7cbc50c6-221c-4c68-a1b2-84ef6923b1eb)
 
 ## 🧠 Inspiration
 
@@ -48,7 +54,7 @@ The key insight was applying this collaborative approach to database schema desi
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript
+- **Frontend**: Next.js 15, React, TypeScript
 - **UI Components**: Tailwind CSS, shadcn/ui
 - **Visualization**: React Flow (@xyflow/react)
 - **Database**: PostgreSQL with Prisma ORM
@@ -119,7 +125,18 @@ The key insight was applying this collaborative approach to database schema desi
 
 ## 📱 Screenshots
 
-[Add 2-3 screenshots showing different aspects of the schema designer]
+<div align="center">
+  <table>
+    <tr>
+      <td><img width="100%" alt="Schema Design View" src="https://github.com/user-attachments/assets/568a366d-2753-4c0d-b8cd-6c1bad9d7885" /></td>
+      <td><img width="100%" alt="Relationship Management" src="https://github.com/user-attachments/assets/c0fd856d-2304-4d5e-9b16-c2259386ee2d" /></td>
+    </tr>
+    <tr>
+      <td><img width="100%" alt="Table Configuration" src="https://github.com/user-attachments/assets/8c8bce34-e611-47dd-9f3b-c34e921c89e1" /></td>
+      <td><img width="100%" alt="AI Assistant Interface" src="https://github.com/user-attachments/assets/23b41c0c-3218-4557-83c5-0517cc443503" /></td>
+    </tr>
+  </table>
+</div>
 
 ## 💪 Development Challenges
 
@@ -161,13 +178,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Prisma team for the robust ORM
 - Azure for cloud infrastructure and AI services
 - Clerk for authentication
-- The inspiration from tools like Cursor and GitHub Copilot
-
-## 📞 Contact
-
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter)
-
-Project Links:
-- GitHub: [https://github.com/yourusername/schemer](https://github.com/yourusername/schemer)
-- DevPost: [https://devpost.com/software/schemer-the-final-db](https://devpost.com/software/schemer-the-final-db)
-- Demo Video: [YouTube](https://www.youtube.com/watch?v=rt8h5SGPhx8)
+- The inspiration from tools like GitHub Copilot

@@ -69,7 +69,7 @@ The key insight was applying this collaborative approach to database schema desi
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/schemer.git
+   git clone https://github.com/ManobhavSachan/schemer.git
    ```
 
 2. Install dependencies:
@@ -97,8 +97,6 @@ The key insight was applying this collaborative approach to database schema desi
 6. Open [http://localhost:3000](http://localhost:3000) to start designing!
 
 ## 🎯 Usage
-
-[Add a GIF showing the basic workflow]
 
 1. **Create Tables**: 
    - Click the "+ Table" button in the sidebar

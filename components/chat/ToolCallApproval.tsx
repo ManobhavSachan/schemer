@@ -39,15 +39,29 @@ export function ToolCallApproval({
   // Get a human-readable description of the tool call
   const getToolDescription = (name: string, args: Record<string, unknown>) => {
     switch (name) {
-      case "create_node":
+      case "grepTables":
+        return `Grep the table "${args.label || args.id}" for "${args.query}"`;
+      case "grepRelationships":
+        return `Grep the relationship "${args.label || args.id}" for "${args.query}"`;
+      case "grepEnums":
+        return `Grep the enum "${args.label || args.id}" for "${args.query}"`;
+      case "createTable":
         return `Create a new table named "${args.label}"`;
-      case "edit_node":
-        return `Edit the table "${args.label || args.id}"`;
-      case "delete_node":
-        return `Delete the table with ID "${args.id}"`;
-      case "create_edge":
+      case "createEnum":
+        return `Create a new enum named "${args.label}"`;
+      case "createRelationship":
         return `Create a relationship from "${args.source}" to "${args.target}"`;
-      case "delete_edge":
+      case "editTable":
+        return `Edit the table "${args.label || args.id}"`;
+      case "editEnum":
+        return `Edit the enum "${args.label || args.id}"`;
+      case "editRelationship":
+        return `Edit the relationship from "${args.source}" to "${args.target}"`;
+      case "deleteTable":
+        return `Delete the table with ID "${args.id}"`;
+      case "deleteEnum":
+        return `Delete the enum with ID "${args.id}"`;
+      case "deleteRelationship":
         return `Delete the relationship with ID "${args.id}"`;
       default:
         return `Execute ${name}`;

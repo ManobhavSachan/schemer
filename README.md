@@ -2,7 +2,7 @@
 
 <div align="center">
   <a href="https://www.youtube.com/watch?v=rt8h5SGPhx8">
-    <img src="https://img.youtube.com/vi/rt8h5SGPhx8/0.jpg" alt="Schemer Demo Video" width="600" />
+      <img src="https://img.youtube.com/vi/rt8h5SGPhx8/maxresdefault.jpg" alt="Schemer Demo Video" width="600" />
   </a>
   <p><em>⬆️ Click to watch the demo video on YouTube ⬆️</em></p>
 </div>
@@ -15,7 +15,9 @@ Schemer is a powerful, interactive database schema design tool that helps develo
 
 ## 💻 System Design
 
-![Schemer System Design - Page 1](https://github.com/user-attachments/assets/7cbc50c6-221c-4c68-a1b2-84ef6923b1eb)
+<div align="center">
+  <img width="600" alt="System Design of Schemer" src="https://github.com/user-attachments/assets/7cbc50c6-221c-4c68-a1b2-84ef6923b1eb" />
+</div>
 
 ## 🧠 Inspiration
 
